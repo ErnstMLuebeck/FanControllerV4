@@ -14,7 +14,7 @@ SI_TDewOut = data(:,8);
 FC_StFan = data(:,9);
 FC_TiFanOnTot = data(:,10);
 
-plot(SI_TOut,'b')
+plot(SI_TIn,'b')
 hold on;
-plot(SI_TIn,'r')
-plot(FC_StFan,'k')
+//plot(SI_TIn,'r')
+//plot(FC_StFan,'k')

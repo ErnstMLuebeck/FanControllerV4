@@ -57,6 +57,7 @@
 #include "TimerOne.h"  
 #include <SD.h>
 #include "List.h"
+#include "MovgAvgFilter.h"
 
 #include "ecu_reader.h"
 #include <FlexCAN.h>
@@ -557,9 +558,9 @@ void OS_60s()
             LogFile.print(":");
             LogFile.print(SC_SysSec);
             LogFile.print("; ");
-            LogFile.print(SI_TIn,2);
+            LogFile.print(SI_TInFilt,2);
             LogFile.print("; ");
-            LogFile.print(SI_HumIn,2);
+            LogFile.print(SI_HumInFilt,2);
             LogFile.print("; ");
             LogFile.print(SI_TDewIn,2);
             LogFile.print("; ");

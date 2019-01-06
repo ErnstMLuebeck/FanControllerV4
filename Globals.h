@@ -73,5 +73,8 @@ float CAN_SpdEng = 0;
 float CAN_TqEng = 0;
 float CAN_TqEngRef = 200;
 
+MovgAvgFilter TInMAFilter = MovgAvgFilter();
+MovgAvgFilter HumInMAFilter = MovgAvgFilter();
+
 
 #endif /* GLOBALS_H */

@@ -23,7 +23,9 @@
 // Connect a 10K resistor from pin 2 (data) to pin 1 (power) of the sensor
 
 float SI_TIn, SI_TOut;
+float SI_TInFilt;
 float SI_HumIn, SI_HumOut;
+float SI_HumInFilt;
 float SI_TDewIn, SI_TDewOut;
 float SI_LvlSun;
 uint8_t SI_StSun;
@@ -77,18 +79,25 @@ void readSensors()
     */
      
     SI_TIn = dht.readTemperature();
-    SI_TOut = 10.3 + random(5);
+    SI_TOut = 10.3 + random(2);
 
     //todo: error handling
     
 
     SI_TIn = saturate(SI_TIn, -40, 50);
     SI_TOut = saturate(SI_TOut, -40, 50);
+    
+    SI_TInFilt = TInMAFilter.calculate(SI_TIn);
+    Serial.println(SI_TInFilt);
 
     //SI_TIn = 26.5 + random(3);
     //SI_TOut = 10.3 + random(5);
     SI_HumIn = dht.readHumidity();
     SI_HumOut = 26.6;
+    
+    SI_HumIn = saturate(SI_TIn, 0, 100);
+    
+    SI_HumInFilt = HumInMAFilter.calculate(SI_HumIn);
 
     SI_TDewIn = dewPoint(SI_TIn, SI_HumIn);
     SI_TDewOut = dewPoint(SI_TOut, SI_HumOut);
