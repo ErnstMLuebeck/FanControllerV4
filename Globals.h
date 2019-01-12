@@ -9,6 +9,7 @@ boolean SD_flgSdCard = 0; // SD card present
 File SongFile;
 File LogFile;
 File SettingsFile;
+File TrainingFile;
 
 List SettingsList = List();
 

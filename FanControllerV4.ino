@@ -105,6 +105,8 @@ void setup()
     
     //handleSdCard();
     initSdCard();
+    
+    loadSdCardTrainingData();
   
     // start OS
     // timer for OS task exectution
@@ -1312,6 +1314,7 @@ void drawNeurNet()
     /* Draw NN layout */
     for(int i=0; i<NrInputNodes; i++)
     {   tft.drawCircle(30+(i*25), 130, 10, FGCOLOR);
+        //tft.drawLine(30+(i*25), 130, 30+(i*25), 160, FGCOLOR);
     }
     for(int i=0; i<NrHiddenNodes; i++)
     {   tft.drawCircle(30+(i*25), 160, 10, FGCOLOR);
@@ -1593,5 +1596,125 @@ void loadSdCardSettings()
         }
     }
 }
+
+void loadSdCardTrainingData()
+{
+    Serial.println("Loading training data from SD card.. ");
+    
+    if (!SD_flgSdCard)
+    {   Serial.println("no card found!");
+    }
+    else
+    {   Serial.println("found.");
+        delay(100); // for SD card..
+        
+        Serial.print("Open file Train.txt.. ");
+        TrainingFile = SD.open("Train.txt",FILE_READ);
+        
+        char c = 0;
+        char str[32];
+        int i = 0;
+        int token = 1;
+        int numData = 0;
+        int numPattern = 0;
+        char tempName[32];
+        float tempValue = 0;
+        int8_t tempLight[4];
+        
+        strcpy(str,"                             ");
+        
+        // Settings parser
+        if (TrainingFile)
+        {   Serial.println("done.");
+            // read from the file until there's nothing else in it:
+            while (TrainingFile.available())
+            {   c = TrainingFile.read();
+                
+                if(c == '\n')
+                {   token = 1;
+                    i = 0;
+                }
+                
+                switch(token)
+                {   // input value
+                    case 1:
+                        if(c == ';')
+                        {   tempValue = atof(str);
+                            i = 0;
+                            strcpy(str,"                               ");
+                            
+                            numData++;
+                            
+                            //Input[numPattern][numData] = tempValue;
+                            
+                            Serial.print(tempValue);
+                            Serial.print(" ");
+                            
+                            if(numData >= NrInputNodes)
+                            {   token++;
+                                numData = 0;
+                                Serial.print(" O: ");
+                            }
+                        }
+                        else if(c != ' ')
+                        {   str[i++] = c;
+                            if(i>30) i = 30;
+                        }
+                        break;
+                        
+                        // output value
+                    case 2:
+                        
+                        if(c == ';')
+                        {   tempValue = atof(str);
+                            i = 0;
+                            strcpy(str,"                               ");
+                            
+                            numData++;
+                            
+                            //Output[numPattern][numData] = tempValue;
+                            
+                            Serial.print(tempValue);
+                            Serial.print(" ");
+                            
+                            if(numData >= NrOutputNodes)
+                            {   token++;
+                                numData = 0;
+                                Serial.println();
+                            }
+                        }
+                        else if(c != ' ')
+                        {   str[i++] = c;
+                            if(i>30) i = 30;
+                        }
+                        break;
+                        
+                    case 3:
+                        if(c == '\n')
+                        {   token = 1;
+                            i = 0;
+                            numData = 0;
+                            Serial.println();
+                            
+                            if(numPattern < (NrPattern-1)) numPattern++;
+                        }
+                        break;
+                }
+            }
+            
+            TrainingFile.close();
+            Serial.println("Training data loaded.");
+        }
+        else
+        {
+            // if the file didn't open, print an error:
+            TrainingFile.close();
+            Serial.println("failed!");
+            // load default song list
+            //defaultSongList();
+        }
+    }
+}
+
 
 
