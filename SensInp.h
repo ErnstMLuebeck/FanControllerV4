@@ -82,18 +82,21 @@ void readSensors()
     SI_TOut = 10.3 + random(2);
 
     //todo: error handling
-    
+    if(isnan(SI_TIn)) SI_TIn = 0;
+    if(isnan(SI_TOut)) SI_TOut = 0;
 
     SI_TIn = saturate(SI_TIn, -40, 50);
     SI_TOut = saturate(SI_TOut, -40, 50);
     
     SI_TInFilt = TInMAFilter.calculate(SI_TIn);
-    Serial.println(SI_TInFilt);
 
     //SI_TIn = 26.5 + random(3);
     //SI_TOut = 10.3 + random(5);
     SI_HumIn = dht.readHumidity();
     SI_HumOut = 26.6;
+    
+    if(isnan(SI_HumIn)) SI_HumIn = 0;
+    if(isnan(SI_HumOut)) SI_HumOut = 0;
     
     SI_HumIn = saturate(SI_TIn, 0, 100);
     

@@ -39,6 +39,7 @@ List SettingsList = List();
 #define UI_CLOCK 4
 #define UI_MENU 5
 #define UI_CAN 7
+#define UI_NN 8
 
 int UI = UI_MENU;
 

@@ -58,6 +58,7 @@
 #include <SD.h>
 #include "List.h"
 #include "MovgAvgFilter.h"
+#include "SimpleNeurNet.h"
 
 #include "ecu_reader.h"
 #include <FlexCAN.h>
@@ -100,7 +101,8 @@ void setup()
 
     FC_TiFanStart = now();
     FC_TiFanStop = now();
-
+    
+    
     //handleSdCard();
     initSdCard();
   
@@ -108,6 +110,7 @@ void setup()
     // timer for OS task exectution
     Timer1.initialize(10000);   // 10ms
     Timer1.attachInterrupt(OS_TaskTimer);
+
 }
 
 void loop() 
@@ -277,6 +280,11 @@ void loop()
               UI = UI_CAN;
               buildUI(UI);
           }
+          if(TC_IsTouchedId == 5)
+          {
+              UI = UI_NN;
+              buildUI(UI);
+          }
 
       }
       else if(UI == UI_INFO)
@@ -309,6 +317,15 @@ void loop()
               buildUI(UI);   
           }
         
+      }
+      else if(UI == UI_NN)
+      {
+          if(TC_IsTouchedId == 0)
+          {
+              UI = UI_MENU;
+              buildUI(UI);
+          }
+          
       }
       else if(UI == UI_KEYPAD)
       {   
@@ -558,17 +575,17 @@ void OS_60s()
             LogFile.print(":");
             LogFile.print(SC_SysSec);
             LogFile.print("; ");
-            LogFile.print(SI_TInFilt,2);
+            LogFile.print(SI_TInFilt,3);
             LogFile.print("; ");
-            LogFile.print(SI_HumInFilt,2);
+            LogFile.print(SI_HumInFilt,3);
             LogFile.print("; ");
-            LogFile.print(SI_TDewIn,2);
+            LogFile.print(SI_TDewIn,3);
             LogFile.print("; ");
-            LogFile.print(SI_TOut,2);
+            LogFile.print(SI_TOut,3);
             LogFile.print("; ");
-            LogFile.print(SI_HumOut,2);
+            LogFile.print(SI_HumOut,3);
             LogFile.print("; ");
-            LogFile.print(SI_TDewOut,2);
+            LogFile.print(SI_TDewOut,3);
             LogFile.print("; ");
             LogFile.print(FC_StFan);
             LogFile.print("; ");
@@ -985,6 +1002,30 @@ void printTextBox(uint16_t x, uint16_t y, int fg_color, int bg_color, char* str,
  
 }
 
+void refreshUI(int ui_id)
+{
+    noInterrupts();
+    
+    switch(ui_id)
+    {   case UI_MENU: drawMenu(); break;
+        case UI_SETTINGS0: drawSettings(0); break;
+        case UI_SETTINGS1: drawSettings(1); break;
+        case UI_INFO: drawInfo(); break;
+        case UI_PLOT: plotLogData(); break;
+        case UI_KEYPAD: drawKeypad(); break;
+        case UI_CLOCK:
+            drawClock(SC_SysHour, SC_SysMin, SC_SysSec, 90, tft.height()/2);
+            //drawGauge(0, 230, tft.height()/2);
+            break;
+        case UI_CAN: plotCanData(CAN_SpdEng, CAN_TqEng); break;
+        case UI_NN: drawNeurNet(); break;
+        default: break;
+    }
+    
+    interrupts();
+    
+}
+
 void buildUI(int ui_id)
 {   
     noInterrupts();
@@ -1010,6 +1051,9 @@ void buildUI(int ui_id)
 
         char label1[10] = "CAN";
         addButton(4, 20, 140, 120, 40, label1);
+        
+        strcpy(label1,"NeurNet");
+        addButton(5, 170, 140, 120, 40, label1);
     }
 
     if(ui_id == UI_SETTINGS0)
@@ -1086,6 +1130,11 @@ void buildUI(int ui_id)
         addButton(0, 260, 25, 40, 40, label7);
     }
     if(ui_id == UI_CAN)
+    {
+        char label7[10] = "H";
+        addButton(0, 260, 25, 40, 40, label7);
+    }
+    if(ui_id == UI_NN)
     {
         char label7[10] = "H";
         addButton(0, 260, 25, 40, 40, label7);
@@ -1255,6 +1304,49 @@ void drawKeypad()
     printTextBox(20, 25, ILI9341_BLACK, BGCOLOR, keypad_str, 20, 13); 
 }
 
+void drawNeurNet()
+{   char str[32];
+    strcpy(str,"Simple Neuronal Net");
+    printTextBox(20, 25, ILI9341_BLACK, BGCOLOR, str, 32, 13);
+    
+    /* Draw NN layout */
+    for(int i=0; i<NrInputNodes; i++)
+    {   tft.drawCircle(30+(i*25), 130, 10, FGCOLOR);
+    }
+    for(int i=0; i<NrHiddenNodes; i++)
+    {   tft.drawCircle(30+(i*25), 160, 10, FGCOLOR);
+    }
+    for(int i=0; i<NrOutputNodes; i++)
+    {   tft.drawCircle(30+(i*25), 190, 10, FGCOLOR);
+    }
+    
+    strcpy(str,"Init NN..");
+    printTextBox(20, 50, ILI9341_BLACK, BGCOLOR, str, 12, 13);
+    
+    initNeurNet();
+    //printTrainingData();
+    
+    strcpy(str,"Init NN.. OK");
+    printTextBox(20, 50, ILI9341_BLACK, BGCOLOR, str, 12, 13);
+    
+    strcpy(str,"Norm. training data..");
+    printTextBox(20, 65, ILI9341_BLACK, BGCOLOR, str, 12, 13);
+    
+    normTrainingData();
+    
+    strcpy(str,"Norm. training data.. OK");
+    printTextBox(20, 65, ILI9341_BLACK, BGCOLOR, str, 12, 13);
+    
+    strcpy(str,"Train NN..");
+    printTextBox(20, 80, ILI9341_BLACK, BGCOLOR, str, 12, 13);
+    
+    long TrainingCycles = trainNeurNet(20000);
+    
+    sprintf(str,"Train NN.. %d OK",TrainingCycles);
+    printTextBox(20, 80, ILI9341_BLACK, BGCOLOR, str, 12, 32);
+    
+}
+
 void drawClock(int h, int m, int s, int center_x, int center_y)
 {   //char label[10] = "Time";
     //printTextBox(20, 25, ILI9341_BLACK, BGCOLOR, label, 20, 13);
@@ -1346,28 +1438,7 @@ void drawGauge(float percent, int center_x, int center_y)
 
 }
 
-void refreshUI(int ui_id)
-{
-    noInterrupts();
-  
-    switch(ui_id)
-    {   case UI_MENU: drawMenu(); break;
-        case UI_SETTINGS0: drawSettings(0); break;
-        case UI_SETTINGS1: drawSettings(1); break;
-        case UI_INFO: drawInfo(); break;
-        case UI_PLOT: plotLogData(); break;
-        case UI_KEYPAD: drawKeypad(); break;
-        case UI_CLOCK: 
-            drawClock(SC_SysHour, SC_SysMin, SC_SysSec, 90, tft.height()/2); 
-            //drawGauge(0, 230, tft.height()/2); 
-            break;
-        case UI_CAN: plotCanData(CAN_SpdEng, CAN_TqEng); break;
-        default: break;
-    }
 
-    interrupts();
-  
-}
 
 void initSdCard()
 {
