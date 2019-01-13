@@ -30,22 +30,11 @@
  * ODER TDewOut > (TIn - 5)
  * ODER (StFan == ON) && (TiFanOn >= TiFanOnMax)
  * ODER SensDiag != 0
- * 
- * Kalibration (SD Karte?)
- * TiFanOn = 600; // [s]
- * TiFanOff = 600; // [s]
- * TOutMin = 12; // [degC]
- * TTauDiffOn = 3; // [degC]
- * TTauDiffOff = 2; // [degC]
- * StFanCtlr = MANUAL, AUTO
- * StFan = ON, OFF
- * TiFanOnTot = 12345 (SD Karte)
- * 
+ *
  */
 
 #include <stdlib.h>
 #include <ILI9341_t3.h>
-//#include <ILI9341_fonts.h>
 #include <font_Arial.h> // from ILI9341_t3
 #include <font_AwesomeF000.h>
 #include <font_AwesomeF180.h>
@@ -59,6 +48,7 @@
 #include "List.h"
 #include "MovgAvgFilter.h"
 #include "SimpleNeurNet.h"
+#include "SimpleMPC.h"
 
 #include "ecu_reader.h"
 #include <FlexCAN.h>
@@ -66,7 +56,6 @@
 
 #include "Globals.h"
 
-// Custom Components
 #include "ProjectLib.h"
 #include "SunMdl.h"
 #include "SysClk.h"
@@ -74,7 +63,6 @@
 #include "TCtl.h"
 #include "TchCtlr.h"
 #include "EvntTmr.h"
-
 
 ecu_reader_class ecu_reader;
 
@@ -102,7 +90,6 @@ void setup()
     FC_TiFanStart = now();
     FC_TiFanStop = now();
     
-    
     //handleSdCard();
     initSdCard();
     
@@ -112,15 +99,12 @@ void setup()
     // timer for OS task exectution
     Timer1.initialize(10000);   // 10ms
     Timer1.attachInterrupt(OS_TaskTimer);
-
 }
 
 void loop() 
 { 
     int engine_data;
-
-    /*
-  
+/*
     if(ecu_reader.request(ENGINE_RPM,&engine_data))
     {    //Serial.print("RPM = ");
          //Serial.println(engine_data);
@@ -144,8 +128,7 @@ void loop()
       //else Serial.println("No TRQ_PERC Data.");
 */
 
-    
-    // display timeout 60s
+    /* display timeout 60s */
     if((millis()-TiLastTouch) >= 60000 && TchTimeout == 0)
     {   //TchTimeout = 1;
         //Serial.println("Display backligh off.");
@@ -158,7 +141,7 @@ void loop()
          */
     }
 
-    // react on touch if display was off
+    /* react on touch if display was off */
     if(TC_IsTouched && TchTimeout == 1)
     {   TchTimeout = 0;
         tft.sleep(0);
@@ -166,125 +149,104 @@ void loop()
         TC_WasTouched = false;     
     }
 
-    // timout if pwd was entered wrong too often
+    /* timout if pwd was entered wrong too often */
     if(StPwdLock && (millis()-TiPwdLockStart) >= 5000)
     {   StPwdLock = 0;
         NrWrongPwd = 0;
         strcpy(keypad_str, "");
     }
 
-  // react on touch if display is on
+  /* react on touch if display is on */
   if(TC_WasTouched && TchTimeout == 0)
   {         
       if(UI == UI_SETTINGS0)
       {
           if(TC_IsTouchedId == 0)
-          {
-              FC_TOutMin += 0.5;
+          {   FC_TOutMin += 0.5;
               refreshUI(UI);
           }
-          if(TC_IsTouchedId == 1)
-          {
-              FC_TOutMin -= 0.5;
+          else if(TC_IsTouchedId == 1)
+          {   FC_TOutMin -= 0.5;
               refreshUI(UI);
           }
-          if(TC_IsTouchedId == 2)
-          {
-              FC_TDewDiffOn += 0.5;
+          else if(TC_IsTouchedId == 2)
+          {   FC_TDewDiffOn += 0.5;
               refreshUI(UI);
           }
-          if(TC_IsTouchedId == 3)
-          {
-              FC_TDewDiffOn -= 0.5;
+          else if(TC_IsTouchedId == 3)
+          {   FC_TDewDiffOn -= 0.5;
               refreshUI(UI);
           }
-
-          if(TC_IsTouchedId == 4)
+          else if(TC_IsTouchedId == 4)
           {   // slider
-              
-          } 
-
-          if(TC_IsTouchedId == 5)
-          {   // home button
-              UI = UI_MENU;
+          }
+          else if(TC_IsTouchedId == 5)
+          {   UI = UI_MENU;
               buildUI(UI);
           }
-
-          if(TC_IsTouchedId == 7)
-          {
-              UI = UI_SETTINGS1;
+          else if(TC_IsTouchedId == 7)
+          {   UI = UI_SETTINGS1;
               buildUI(UI);
           }
 
       }
-      if(UI == UI_SETTINGS1)
+      else if(UI == UI_SETTINGS1)
       {
           if(TC_IsTouchedId == 0)
-          {
-              FC_TiFanOn += 60;
+          {   FC_TiFanOn += 60;
               FC_TiFanOff = FC_TiFanOn;
               refreshUI(UI);
           }
-          if(TC_IsTouchedId == 1)
-          {
-              FC_TiFanOn -= 60;
+          else if(TC_IsTouchedId == 1)
+          {   FC_TiFanOn -= 60;
               FC_TiFanOff = FC_TiFanOn;
               refreshUI(UI);
           }
-          if(TC_IsTouchedId == 2)
-          {
-              FC_TDewDiffOff += 0.5;
+          else if(TC_IsTouchedId == 2)
+          {   FC_TDewDiffOff += 0.5;
               refreshUI(UI);
           }
-          if(TC_IsTouchedId == 3)
-          {
-              FC_TDewDiffOff -= 0.5;
+          else if(TC_IsTouchedId == 3)
+          {   FC_TDewDiffOff -= 0.5;
               refreshUI(UI);
           }
-        
-          if(TC_IsTouchedId == 5)
-          {
-              UI = UI_MENU;
+          else if(TC_IsTouchedId == 5)
+          {   UI = UI_MENU;
               buildUI(UI);
           }
-
-          if(TC_IsTouchedId == 6)
-          {
-              UI = UI_SETTINGS0;
+          else if(TC_IsTouchedId == 6)
+          {   UI = UI_SETTINGS0;
               buildUI(UI);
           }
-
       }
       else if(UI == UI_MENU)
       {
           if(TC_IsTouchedId == 0)
-          {
-              UI = UI_INFO;
+          {   UI = UI_INFO;
               buildUI(UI);
           }
-          if(TC_IsTouchedId == 1)
-          {
-              UI = UI_PLOT;
+          else if(TC_IsTouchedId == 1)
+          {   UI = UI_PLOT;
               buildUI(UI);
           }
-          if(TC_IsTouchedId == 2)
-          {
-              UI = UI_CLOCK;
+          else if(TC_IsTouchedId == 2)
+          {   UI = UI_CLOCK;
               buildUI(UI);
           }
-          if(TC_IsTouchedId == 3)
-          {
-              UI = UI_SETTINGS0;
+          else if(TC_IsTouchedId == 3)
+          {   UI = UI_SETTINGS0;
               buildUI(UI);
           }
-          if(TC_IsTouchedId == 4)
-          {
-              UI = UI_CAN;
+          else if(TC_IsTouchedId == 4)
+          {   UI = UI_CAN;
               buildUI(UI);
           }
-          if(TC_IsTouchedId == 5)
-          {
-              UI = UI_NN;
+          else if(TC_IsTouchedId == 5)
+          {   UI = UI_NN;
+              buildUI(UI);
+          }
+          else if(TC_IsTouchedId == 6)
+          {   UI = UI_MPC;
               buildUI(UI);
           }
 
@@ -292,42 +254,38 @@ void loop()
       else if(UI == UI_INFO)
       {   
           if(TC_IsTouchedId == 0)
-          {   
-              UI = UI_MENU;
+          {   UI = UI_MENU;
               buildUI(UI);   
           }
-          if(TC_IsTouchedId == 1)
-          {
-              readSensors();
+          else if(TC_IsTouchedId == 1)
+          {   readSensors();
           }
         
       }
       else if(UI == UI_PLOT)
-      {   
-          if(TC_IsTouchedId == 0)
-          {   
-              UI = UI_MENU;
+      {   if(TC_IsTouchedId == 0)
+          {   UI = UI_MENU;
               buildUI(UI);   
           }
-        
       }
       else if(UI == UI_CAN)
-      {   
-          if(TC_IsTouchedId == 0)
-          {   
-              UI = UI_MENU;
+      {   if(TC_IsTouchedId == 0)
+          {   UI = UI_MENU;
               buildUI(UI);   
           }
         
       }
       else if(UI == UI_NN)
-      {
-          if(TC_IsTouchedId == 0)
-          {
-              UI = UI_MENU;
+      {   if(TC_IsTouchedId == 0)
+          {   UI = UI_MENU;
               buildUI(UI);
           }
-          
+      }
+      else if(UI == UI_MPC)
+      {   if(TC_IsTouchedId == 0)
+          {   UI = UI_MENU;
+              buildUI(UI);
+          }
       }
       else if(UI == UI_KEYPAD)
       {   
@@ -373,23 +331,16 @@ void loop()
               }
               
           }
-
           refreshUI(UI);
-        
       }
       else if(UI == UI_CLOCK)
-      {   
-          if(TC_IsTouchedId == 0)
-          {   
-              UI = UI_MENU;
+      {   if(TC_IsTouchedId == 0)
+          {   UI = UI_MENU;
               buildUI(UI);   
           }
-        
       }
-      
       TC_WasTouched = false;     
   }
-
 }
 
 void OS_TaskTimer()
@@ -397,14 +348,11 @@ void OS_TaskTimer()
     noInterrupts();
 
     if(ms_counter == 0)
-    {   
-        //Serial.println("Init");
-        OS_Init();
+    {   OS_Init();
     }
     
     ms_counter++;
 
-    // 10ms tasks
     OS_10ms();
     
     if(ms_counter%10 == 0)
@@ -414,17 +362,13 @@ void OS_TaskTimer()
     {   //Serial.println("500ms");
     }
     if(ms_counter%100 == 0)
-    {   //Serial.println("1s");
-        OS_1s();
-        
+    {   OS_1s();
     }
     if(ms_counter%1000 == 0)
-    {   //Serial.println("10s");     
-        OS_10s();       
+    {   OS_10s();
     }
     if(ms_counter%6000 == 0)
-    {   //Serial.println("60s");     
-        OS_60s();       
+    {   OS_60s();
     }
     
     interrupts();
@@ -493,26 +437,21 @@ void OS_Init()
     item_value = SettingsList.getItemValue(item_id);
     FC_TOutMin = item_value;
 
-   
     buildUI(UI);
 }
 
 void OS_10ms()
-{
-    TouchController();
+{   TouchController();
 }
 
 void OS_1s()
-{
-    getSystemTime(&SC_SysHour, &SC_SysMin, &SC_SysSec);
+{   getSystemTime(&SC_SysHour, &SC_SysMin, &SC_SysSec);
     getSystemDate(&SC_SysDay, &SC_SysMon, &SC_SysYear);
     getDst(&SC_Dst);
 
     //EventTimer();
     readSensors();
     StmacFanCtlr();
-
-    // sensor data MA filter
 
     refreshUI(UI);
 }
@@ -543,26 +482,11 @@ void OS_60s()
         calcSunsetTime(Sys_Lati, Sys_Longi, SC_SysMon, SC_SysDay, SM_SetHour, SM_SetMin);
     }
 
-    /*
-    * Datenlogger SD, jede Minute
-    *   Datum: 2018-07-23
-    *   Uhrzeit: 13:50:45
-    *   TIn: 21.2
-    *   HumIn: 45.2
-    *   TDewIn: 15.2
-    *   TOut: 24.1
-    *   HumOut: 80.3
-    *   TDewOut: 18.5
-    *   StFan: 1
-    *   TiFanOnTot: 13900
-    */
-
     if (SD_flgSdCard) 
     {   LogFile = SD.open("LOGFILE.txt", FILE_WRITE); // no '-' in filename
 
         if(LogFile)
         {   //LogFile.println("2018-08-01; 15:27:23; 23.2; 48.3; 14.2; 34.5; 23.5; 16.4; 0; 12309;");
-            
             LogFile.print(SC_SysYear);
             LogFile.print("-");
             if(SC_SysMon < 10) LogFile.print("0");
@@ -594,8 +518,6 @@ void OS_60s()
             LogFile.print((float)FC_TiFanOnTot/3600,2);
             LogFile.println("; ");
             
-            
-            
             LogFile.close();
             delay(100); // for SD card..
             Serial.println("Data written to SD Card.");
@@ -626,21 +548,17 @@ void refreshStatusBar()
     if(SC_SysMon < 10) month_str[0] = '0';
   
     sprintf(date_str, "%s.%s.%s",day_str, month_str, year_str);
-    //Serial.println(date_str);
     
     dtostrf(SC_SysHour+SC_Dst, 2, 0, hour_str);
     dtostrf(SC_SysMin, 2, 0, minute_str);
     if(SC_SysHour+SC_Dst < 10) hour_str[0] = '0';
     if(SC_SysMin < 10) minute_str[0] = '0';
   
-    sprintf(time_str, "%s:%s",hour_str, minute_str);  
-    //Serial.println(time_str);
+    sprintf(time_str, "%s:%s",hour_str, minute_str);
   
     sprintf(title_str, "%s - %s",time_str, date_str);
-    //Serial.println(title_str);
     
     tft.print(title_str);
- 
 }
 
 void printBootLogo()
@@ -655,7 +573,6 @@ void printBootLogo()
 
 void plotLogData()
 {
-
     int padding = 20;
     int plotWidth = tft.width()-2*padding;
     int plotHeight = tft.height()-2*padding;
@@ -1021,6 +938,7 @@ void refreshUI(int ui_id)
             break;
         case UI_CAN: plotCanData(CAN_SpdEng, CAN_TqEng); break;
         case UI_NN: drawNeurNet(); break;
+        case UI_MPC: drawMPC(); break;
         default: break;
     }
     
@@ -1056,6 +974,9 @@ void buildUI(int ui_id)
         
         strcpy(label1,"NeurNet");
         addButton(5, 170, 140, 120, 40, label1);
+        
+        strcpy(label1,"MPC");
+        addButton(6, 20, 190, 120, 40, label1);
     }
 
     if(ui_id == UI_SETTINGS0)
@@ -1137,6 +1058,11 @@ void buildUI(int ui_id)
         addButton(0, 260, 25, 40, 40, label7);
     }
     if(ui_id == UI_NN)
+    {
+        char label7[10] = "H";
+        addButton(0, 260, 25, 40, 40, label7);
+    }
+    if(ui_id == UI_MPC)
     {
         char label7[10] = "H";
         addButton(0, 260, 25, 40, 40, label7);
@@ -1348,6 +1274,15 @@ void drawNeurNet()
     sprintf(str,"Train NN.. %d OK",TrainingCycles);
     printTextBox(20, 80, ILI9341_BLACK, BGCOLOR, str, 12, 32);
     
+}
+
+void drawMPC()
+{   char str[32];
+    strcpy(str,"Simple MPC");
+    printTextBox(20, 25, ILI9341_BLACK, BGCOLOR, str, 32, 13);
+    
+    calcMPC();
+
 }
 
 void drawClock(int h, int m, int s, int center_x, int center_y)

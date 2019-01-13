@@ -98,7 +98,7 @@ void readSensors()
     if(isnan(SI_HumIn)) SI_HumIn = 0;
     if(isnan(SI_HumOut)) SI_HumOut = 0;
     
-    SI_HumIn = saturate(SI_TIn, 0, 100);
+    SI_HumIn = saturate(SI_HumIn, 0, 100);
     
     SI_HumInFilt = HumInMAFilter.calculate(SI_HumIn);
 

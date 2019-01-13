@@ -41,6 +41,7 @@ List SettingsList = List();
 #define UI_MENU 5
 #define UI_CAN 7
 #define UI_NN 8
+#define UI_MPC 9
 
 int UI = UI_MENU;
 
