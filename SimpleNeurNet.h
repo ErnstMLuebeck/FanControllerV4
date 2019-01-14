@@ -98,15 +98,14 @@ int initNeurNet()
     TrainingCycle = 0;
     
 	for(int p = 0 ; p < NrPattern ; p++ ) 
-	{   RandomizedIndex[p] = p ;
+	{   RandomizedIndex[p] = p;
 	}
 
 	/* Initialize HiddenNodesWeights and ChangeHiddenNodesWeights */
 	for(int i = 0 ; i < NrHiddenNodes ; i++ )
 	{    
 		for(int j = 0 ; j <= NrInputNodes ; j++ ) 
-		{ 
-			ChangeHiddenNodesWeights[j][i] = 0.0 ;
+		{   ChangeHiddenNodesWeights[j][i] = 0.0 ;
 			Rando = float(rand()%100)/100;
 			HiddenNodesWeights[j][i] = 2.0 * ( Rando - 0.5 ) * InitialWeightMax ;
 		}
@@ -138,12 +137,10 @@ long trainNeurNet(long MaxTrainingCycles)
 
 	/* Begin training */
     for(TrainingCycle = 1 ; TrainingCycle < MaxTrainingCycles; TrainingCycle++)
-    {    
-
+    {
 		/* Randomize order of training patterns */
         for(int p = 0 ; p < NrPattern ; p++) 
-        {
-            int q = rand()%NrPattern;
+        {   int q = rand()%NrPattern;
             int r = RandomizedIndex[p] ; 
             RandomizedIndex[p] = RandomizedIndex[q] ; 
             RandomizedIndex[q] = r ;
@@ -157,19 +154,16 @@ long trainNeurNet(long MaxTrainingCycles)
 
 			/* Compute HiddenNodes layer activations */
             for(int i = 0 ; i < NrHiddenNodes ; i++ )
-            {    
-                Accum = HiddenNodesWeights[NrInputNodes][i];
+            {   Accum = HiddenNodesWeights[NrInputNodes][i];
                 for(int j = 0 ; j < NrInputNodes ; j++ ) 
-                {
-                    Accum += Input[p][j] * HiddenNodesWeights[j][i] ;
+                {   Accum += Input[p][j] * HiddenNodesWeights[j][i] ;
                 }
                 HiddenNodes[i] = actFunc(Accum);
             }
 
 			/* Compute OutputNodes layer activations and calculate errors */
 			for(int i = 0 ; i < NrOutputNodes ; i++ )
-			{    
-				Accum = OutputWeights[NrHiddenNodes][i];
+			{   Accum = OutputWeights[NrHiddenNodes][i];
 				for(int j = 0 ; j < NrHiddenNodes ; j++ )
 				{	Accum += HiddenNodes[j] * OutputWeights[j][i] ;
 				}
@@ -179,9 +173,8 @@ long trainNeurNet(long MaxTrainingCycles)
 			}
 
 			/* Backpropagate errors to HiddenNodes layer */
-			for(int i = 0 ; i < NrHiddenNodes ; i++ )
-			{    
-				Accum = 0.0 ;
+			for(int i = 0; i < NrHiddenNodes; i++)
+			{   Accum = 0.0 ;
 				for(int j = 0 ; j < NrOutputNodes ; j++ )
 				{	Accum += OutputWeights[i][j] * OutputDelta[j] ;
 				}
@@ -189,11 +182,13 @@ long trainNeurNet(long MaxTrainingCycles)
 			}
 
 			/* Update Inner-->HiddenNodes Weights */
-			for(int i = 0 ; i < NrHiddenNodes ; i++ )
+			for(int i = 0; i < NrHiddenNodes; i++)
 			{     
-				ChangeHiddenNodesWeights[NrInputNodes][i] = LearningRate * HiddenNodesDelta[i] + Momentum * ChangeHiddenNodesWeights[NrInputNodes][i] ;
-				HiddenNodesWeights[NrInputNodes][i] += ChangeHiddenNodesWeights[NrInputNodes][i] ;
-				for(int j = 0 ; j < NrInputNodes ; j++ ) 
+				ChangeHiddenNodesWeights[NrInputNodes][i] = LearningRate * HiddenNodesDelta[i] + Momentum * ChangeHiddenNodesWeights[NrInputNodes][i];
+                
+				HiddenNodesWeights[NrInputNodes][i] += ChangeHiddenNodesWeights[NrInputNodes][i];
+                
+				for(int j = 0; j < NrInputNodes; j++)
 				{	ChangeHiddenNodesWeights[j][i] = LearningRate * Input[p][j] * HiddenNodesDelta[i] + Momentum * ChangeHiddenNodesWeights[j][i];
 					HiddenNodesWeights[j][i] += ChangeHiddenNodesWeights[j][i] ;
 				}
@@ -202,11 +197,13 @@ long trainNeurNet(long MaxTrainingCycles)
 			/* Update HiddenNodes-->OutputNodes Weights */
 			for(int i = 0 ; i < NrOutputNodes ; i ++ )
 			{    
-				ChangeOutputWeights[NrHiddenNodes][i] = LearningRate * OutputDelta[i] + Momentum * ChangeOutputWeights[NrHiddenNodes][i] ;
-				OutputWeights[NrHiddenNodes][i] += ChangeOutputWeights[NrHiddenNodes][i] ;
+				ChangeOutputWeights[NrHiddenNodes][i] = LearningRate * OutputDelta[i] + Momentum * ChangeOutputWeights[NrHiddenNodes][i];
+                
+				OutputWeights[NrHiddenNodes][i] += ChangeOutputWeights[NrHiddenNodes][i];
+                
 				for(int j = 0 ; j < NrHiddenNodes ; j++ )
-				{
-					ChangeOutputWeights[j][i] = LearningRate * HiddenNodes[j] * OutputDelta[i] + Momentum * ChangeOutputWeights[j][i] ;
+				{   ChangeOutputWeights[j][i] = LearningRate * HiddenNodes[j] * OutputDelta[i] + Momentum * ChangeOutputWeights[j][i];
+                    
 					OutputWeights[j][i] += ChangeOutputWeights[j][i];
 				}	
 			}
