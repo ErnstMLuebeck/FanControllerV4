@@ -23,7 +23,7 @@ y_hat = C*x_hat_kn1;
 x_hat_kn1 = x_hat;
 */
 
-void multiplyMatrices(float firstMatrix[][3], float secondMatrix[][1], float mult[][1], int rowFirst, int columnFirst, int rowSecond, int columnSecond);
+void MatrixMultiply(float* A, float* B, int m, int p, int n, float* C);
 
 const int NX = 3;
 const int NY = 1;
@@ -80,26 +80,45 @@ const float Hinv_PhiT[NP][NP] = {
 
 void calcMPC()
 {
-    // x_hat = (A-L*C)*x_hat_kn1 + L*y_sensor + B*u_opt;
+        // x_hat = (A-L*C)*x_hat_kn1 + L*y_sensor + B*u_opt;
     
     int row1 = NX;
-    int row2 = NY;
-    int col2 = NX;
+    int col1 = 1;
+    int row2 = 1;
+    int col2 = NY;
     
-    float result[row1][col2];
-    float acc;
+    //float result[row1][col2];
+    float acc = 0;
     
+    /* matrix multiplication
+    acc = 0;
     for (int c = 0; c < row1; c++)
     {   for (int d = 0; d < col2; d++)
         {   for (int k = 0; k < row2; k++)
             {   acc += L[c][k] * C[k][d];
             }
             result[c][d] = acc;
-            //Serial.println(acc,3);
             acc = 0;
         }
     }
-
+    */
+    row1 = NX;
+    col1 = 1;
+    row2 = 1;
+    col2 = NX;
+    float result[row1][col2];
+    
+    MatrixMultiply((float*)L, (float*)C, row1, col1, col2, (float*)result);
+    
+    printf("MatrixMath:\n"); 
+    for (int r = 0; r < row1; r++)
+    {   for (int c = 0; c < col2; c++)
+        {   
+            printf("%f ",result[r][c]);  
+        }
+        printf("\n");  
+    }
+    printf("\n"); 
     
     /*
     float Y_ref[][];
@@ -135,3 +154,20 @@ void calcMPC()
     
 }
 
+void MatrixMultiply(float* A, float* B, int m, int p, int n, float* C)
+{   // MatrixMath.cpp Library for Matrix Math
+	// A = input matrix (m x p)
+	// B = input matrix (p x n)
+	// m = number of rows in A
+	// p = number of columns in A = number of rows in B
+	// n = number of columns in B
+	// C = output matrix = A*B (m x n)
+	int i, j, k;
+	for (i = 0; i < m; i++)
+		for(j = 0; j < n; j++)
+		{
+			C[n * i + j] = 0;
+			for (k = 0; k < p; k++)
+				C[n * i + j] = C[n * i + j] + A[p * i + k] * B[n * k + j];
+		}
+}
