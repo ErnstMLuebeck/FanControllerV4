@@ -171,3 +171,46 @@ void MatrixMultiply(float* A, float* B, int m, int p, int n, float* C)
 				C[n * i + j] = C[n * i + j] + A[p * i + k] * B[n * k + j];
 		}
 }
+
+void MatrixPrint(float* A, int m, int n)
+{
+	// A = input matrix (m x n)
+	int i, j;
+	printf("\n");
+	for (i = 0; i < m; i++)
+	{
+		for (j = 0; j < n; j++)
+		{
+			printf("%f ", A[n * i + j]);
+		}
+		printf("\n");
+	}
+}
+
+void MatrixAdd(mtx_type* A, mtx_type* B, int m, int n, mtx_type* C)
+{
+	// A = input matrix (m x n)
+	// B = input matrix (m x n)
+	// m = number of rows in A = number of rows in B
+	// n = number of columns in A = number of columns in B
+	// C = output matrix = A+B (m x n)
+	int i, j;
+	for (i = 0; i < m; i++)
+		for(j = 0; j < n; j++)
+			C[n * i + j] = A[n * i + j] + B[n * i + j];
+}
+
+
+//Matrix Subtraction Routine
+void MatrixSubtract(mtx_type* A, mtx_type* B, int m, int n, mtx_type* C)
+{
+	// A = input matrix (m x n)
+	// B = input matrix (m x n)
+	// m = number of rows in A = number of rows in B
+	// n = number of columns in A = number of columns in B
+	// C = output matrix = A-B (m x n)
+	int i, j;
+	for (i = 0; i < m; i++)
+		for(j = 0; j < n; j++)
+			C[n * i + j] = A[n * i + j] - B[n * i + j];
+}
