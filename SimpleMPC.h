@@ -13,11 +13,11 @@ const int NY = 1;
 const int NU = 1;
 const int NP = 10;
 
-float A[NX][NX] ={
+const float A[NX][NX] ={
     {0.990703820085258, 0.0929617991474188},
     {-0.185923598294838, 0.859235982948375}};
 
-float B[NX][NU] = {
+const float B[NX][NU] = {
     {-0.0995351910042629},
     {0.00929617991474188}};
 
@@ -81,6 +81,16 @@ const float Hinv_PhiT[NP][NP] = {
 
 int main()
 {
+    
+    /* Read in sensor: y_sensor = */
+    
+    /* Generate reference trajectory: Y_ref = */
+    
+    /* Calculate MPC equation: u_opt = */
+    
+    /* Update Observer: x_hat = */
+    
+    /* Apply control value: actuator = u_opt */
      
     int row1;
     int col1;
@@ -177,7 +187,7 @@ int main()
     MatrixAdd((float*)Temp8, (float*)Temp3, row1, col1, (float*)x_hat); // x_hat = Temp8 + Temp3
     MatrixPrint((float*) x_hat, row1, col1);
     
-    MatrixCopy((float*)x_hat, row1, col1, (float*)x_hat_kn1);
+    MatrixCopy((float*)x_hat, row1, col1, (float*)x_hat_kn1); // x_hat_kn1 = x_hat
     MatrixPrint((float*)x_hat_kn1, row1, col1);
     
     return(1);
