@@ -1,29 +1,10 @@
-
-/*
- 
-% MATLAB implementation of unconstrained MPC
- 
-function [u_opt, Y_opt, x_hat, y_hat] = SisoMpcSimple(Y_ref, y_sensor, A, B, C, L, F, Hinv_PhiT, Phi)
-%#codegen
-Y_ref = Y_ref(:);
-nx = size(A,1);
-persistent x_hat_kn1;
-if isempty(x_hat_kn1)
-% initial observer states
-x_hat_kn1 = zeros(nx,1);
-end
-% d/d deltaU (J) = 0 -->
-deltaU_opt = Hinv_PhiT * (Y_ref - F * x_hat_kn1);
-Y_opt = F*x_hat_kn1 + Phi*deltaU_opt; % optional calculation
-%receeding horizon control
-u_opt = deltaU_opt(1);
-% observer update
-x_hat = (A-L*C)*x_hat_kn1 + L*y_sensor + B*u_opt;
-y_hat = C*x_hat_kn1;
-x_hat_kn1 = x_hat;
-*/
+#include <stdio.h>
+#include <math.h>
 
 void MatrixMultiply(float* A, float* B, int m, int p, int n, float* C);
+void MatrixPrint(float* A, int m, int n);
+void MatrixSubtract(float* A, float* B, int m, int n, float* C);
+void MatrixAdd(float* A, float* B, int m, int n, float* C);
 
 const int NX = 3;
 const int NY = 1;
@@ -46,8 +27,20 @@ const float L[NX][NY] = {
     {0.427310988590526}};
 
 float x_hat_kn1[NX][1] = {
+    {1},
+    {2}};
+    
+float Y_ref[NP*NY][1] = {
     {0},
-    {0}};
+    {0},
+    {0},
+    {0},
+    {0},
+    {2},
+    {2},
+    {2},
+    {2},
+    {2}};
 
 float delatU_opt[NP][NU];
 
@@ -78,48 +71,26 @@ const float Hinv_PhiT[NP][NP] = {
     {0.0491593835674408, 0.113416492398536, 0.151610650198517, 0.114181284888575, -0.0587384162281129, -0.433000852563402, -1.06524904928621, -1.97197160977792, 0.499955351548056, 2.58267917356673},
     {0.0201114747389763, 0.0491593835674409, 0.0730962476211764, 0.074093824235859, 0.0290490995300585, -0.0899722568924163, -0.311533865574383, -0.654749008529499, -1.11128742435152, 1.96061274041497}};
 
-void calcMPC()
+int main()
 {
         // x_hat = (A-L*C)*x_hat_kn1 + L*y_sensor + B*u_opt;
     
-    int row1 = NX;
-    int col1 = 1;
-    int row2 = 1;
-    int col2 = NY;
+    int row1;
+    int col1;
+    int row2;
+    int col2;
     
-    //float result[row1][col2];
-    float acc = 0;
+
+    row1 = NP*NY;
+    col1 = NX;
+    row2 = NX;
+    col2 = 1;
+    float Temp1[row1][col2]; // F*x_hat_kn1
     
-    /* matrix multiplication
-    acc = 0;
-    for (int c = 0; c < row1; c++)
-    {   for (int d = 0; d < col2; d++)
-        {   for (int k = 0; k < row2; k++)
-            {   acc += L[c][k] * C[k][d];
-            }
-            result[c][d] = acc;
-            acc = 0;
-        }
-    }
-    */
-    row1 = NX;
-    col1 = 1;
-    row2 = 1;
-    col2 = NX;
-    float result[row1][col2];
+    MatrixMultiply((float*)F, (float*)x_hat_kn1, row1, col1, col2, (float*)Temp1);
+    MatrixPrint((float*) Temp1, row1, col2);
     
-    MatrixMultiply((float*)L, (float*)C, row1, col1, col2, (float*)result);
-    
-    printf("MatrixMath:\n"); 
-    for (int r = 0; r < row1; r++)
-    {   for (int c = 0; c < col2; c++)
-        {   
-            printf("%f ",result[r][c]);  
-        }
-        printf("\n");  
-    }
-    printf("\n"); 
-    
+  
     /*
     float Y_ref[][];
     float y_sensor;
@@ -151,6 +122,8 @@ void calcMPC()
     x_hat_kn1 = x_hat;
     
     */
+    
+    return(1);
     
 }
 
@@ -187,7 +160,7 @@ void MatrixPrint(float* A, int m, int n)
 	}
 }
 
-void MatrixAdd(mtx_type* A, mtx_type* B, int m, int n, mtx_type* C)
+void MatrixAdd(float* A, float* B, int m, int n, float* C)
 {
 	// A = input matrix (m x n)
 	// B = input matrix (m x n)
@@ -202,7 +175,7 @@ void MatrixAdd(mtx_type* A, mtx_type* B, int m, int n, mtx_type* C)
 
 
 //Matrix Subtraction Routine
-void MatrixSubtract(mtx_type* A, mtx_type* B, int m, int n, mtx_type* C)
+void MatrixSubtract(float* A, float* B, int m, int n, float* C)
 {
 	// A = input matrix (m x n)
 	// B = input matrix (m x n)
