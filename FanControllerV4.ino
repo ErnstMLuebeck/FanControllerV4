@@ -1282,6 +1282,24 @@ void drawMPC()
     printTextBox(20, 25, ILI9341_BLACK, BGCOLOR, str, 32, 13);
     
     calcMPC();
+    
+    for(int i=0; i<NP-1; i++)
+    {   tft.fillRect(20+(i*20), 100-(int)Y_ref_kn1[i][1], 5, 5, ILI9341_WHITE);
+        tft.fillRect(20+(i*20), 100-(int)Y_opt_kn1[i][1], 5, 5, ILI9341_WHITE);
+        tft.fillRect(20+(i*20), 200-(int)deltaU_opt_kn1[i][1], 5, 5, ILI9341_WHITE);
+        
+        // Y_ref trajectory
+        tft.drawLine(20, 102, 200, 102, ILI9341_BLACK);
+        tft.fillRect(20+(i*20), 100-(int)Y_ref[i][1], 5, 5, ILI9341_RED);
+        
+        // Y_opt trajectory
+        tft.drawLine(20, 102, 200, 102, ILI9341_BLACK);
+        tft.fillRect(20+(i*20), 100-(int)Y_opt[i][1], 5, 5, ILI9341_GREEN);
+        
+        // u_opt
+        tft.drawLine(20, 202, 200, 202, ILI9341_BLACK);
+        tft.fillRect(20+(i*20), 200-(int)deltaU_opt[i][1], 5, 5, ILI9341_BLUE);
+    }
 
 }
 
