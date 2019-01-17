@@ -5,8 +5,10 @@ void MatrixMultiply(float* A, float* B, int m, int p, int n, float* C);
 void MatrixPrint(float* A, int m, int n);
 void MatrixSubtract(float* A, float* B, int m, int n, float* C);
 void MatrixAdd(float* A, float* B, int m, int n, float* C);
+void MatrixScale(float* A, int m, int n, float k, float* C);
+void MatrixCopy(float* A, int n, int m, float* B);
 
-const int NX = 3;
+const int NX = 2;
 const int NY = 1;
 const int NU = 1;
 const int NP = 10;
@@ -25,6 +27,12 @@ const float C[NY][NX] = {
 const float L[NX][NY] = {
     {-0.351798484809834},
     {0.427310988590526}};
+    
+float y_sensor = 1;
+
+float x_hat[NX][1] = {
+    {0},
+    {0}};
 
 float x_hat_kn1[NX][1] = {
     {1},
@@ -73,55 +81,104 @@ const float Hinv_PhiT[NP][NP] = {
 
 int main()
 {
-        // x_hat = (A-L*C)*x_hat_kn1 + L*y_sensor + B*u_opt;
-    
+     
     int row1;
     int col1;
     int row2;
     int col2;
     
-
+    /* MPC Equations:
+     * deltaU_opt = Hinv * PhiT * (Y_ref - F * x_hat_kn1) */
+       
     row1 = NP*NY;
     col1 = NX;
     row2 = NX;
     col2 = 1;
-    float Temp1[row1][col2]; // F*x_hat_kn1
-    
-    MatrixMultiply((float*)F, (float*)x_hat_kn1, row1, col1, col2, (float*)Temp1);
+    float Temp1[row1][col2];    
+    MatrixMultiply((float*)F, (float*)x_hat_kn1, row1, col1, col2, (float*)Temp1); // F*x_hat_kn1 
     MatrixPrint((float*) Temp1, row1, col2);
+       
+    row1 = NP;
+    col1 = 1;
+    row2 = NP;
+    col2 = 1;
+    float Temp2[row1][col1]; 
+    MatrixSubtract((float*) Y_ref, (float*) Temp1, row1, col1, (float*) Temp2); // Y_ref - Temp1
+    MatrixPrint((float*) Temp2, row1, col1);
     
+    row1 = NP;
+    col1 = NP;
+    row2 = NP;
+    col2 = 1;
+    float deltaU_opt[row1][col2];  
+    MatrixMultiply((float*)Hinv_PhiT, (float*)Temp2, row1, col1, col2, (float*)deltaU_opt); // Hinv_PhiT * Temp2 
+    MatrixPrint((float*)deltaU_opt, row1, col2);
+    
+    float u_opt = deltaU_opt[0][0];
+    printf("\n%f\n",u_opt);
   
-    /*
-    float Y_ref[][];
-    float y_sensor;
-    float u_opt;
+    /* Observer update:
+     * x_hat = (A-L*C)*x_hat_kn1 + L*y_sensor + B*u_opt; 
+     * x_hat_kn1 = x_hat; */
     
-    float A[NX][NX];
-    float B[NX][NU];
-    float C[1][NX];
-    float L[][];
+    row1 = NX;
+    col1 = NU;
+    row2 = 1;
+    col2 = 1;
+    float Temp3[row1][col1];
+    MatrixScale((float*)B, row1, col1, u_opt, (float*)Temp3); // B*u_opt
+    MatrixPrint((float*)Temp3, row1, col1);
     
-    static float x_hat_kn1[NX];
-    float deltaU_opt[NU];
-    float Phi[][];
-    float Hinv_PhiT[][];
-    float F[][];
+    row1 = NX;
+    col1 = NU;
+    row2 = 1;
+    col2 = 1;
+    float Temp4[row1][col1];
+    MatrixScale((float*)L, row1, col1, y_sensor, (float*)Temp4); // L*y_sensor
+    MatrixPrint((float*)Temp4, row1, col1);
     
-    /* d/d deltaU (J) = 0
-    deltaU_opt = Hinv_PhiT * (Y_ref - F * x_hat_kn1);
+
+    row1 = NX;
+    col1 = 1;
+    row2 = NY;
+    col2 = NX;
+    float Temp5[row1][col2];
+    MatrixMultiply((float*)L, (float*)C, row1, col1, col2, (float*)Temp5); // L*C
+    MatrixPrint((float*)Temp5, row1, col2);
     
-    /* optional calculation
-    /* Y_opt = F*x_hat_kn1 + Phi*deltaU_opt;
+    row1 = NX;
+    col1 = NX;
+    row2 = NX;
+    col2 = NX;
+    float Temp6[row1][col1]; 
+    MatrixSubtract((float*) A, (float*) Temp5, row1, col1, (float*) Temp6); // A-Temp5
+    MatrixPrint((float*) Temp6, row1, col1);
     
-    /* receeding horizon control
-    u_opt = deltaU_opt[1];
+    row1 = NX;
+    col1 = NX;
+    row2 = NX;
+    col2 = 1;
+    float Temp7[row1][col2];
+    MatrixMultiply((float*)Temp6, (float*)x_hat_kn1, row1, col1, col2, (float*)Temp7); // Temp6*x_hat_kn1
+    MatrixPrint((float*)Temp7, row1, col2);
     
-    /* observer update
-    x_hat = (A-L*C)*x_hat_kn1 + L*y_sensor + B*u_opt;
-    y_hat = C*x_hat_kn1;
-    x_hat_kn1 = x_hat;
+    row1 = NX;
+    col1 = 1;
+    row2 = NX;
+    col2 = 1;
+    float Temp8[row1][col1]; 
+    MatrixAdd((float*)Temp7, (float*)Temp4, row1, col1, (float*)Temp8); // Temp7 + Temp4
+    MatrixPrint((float*) Temp8, row1, col1);
     
-    */
+    row1 = NX;
+    col1 = 1;
+    row2 = NX;
+    col2 = 1;
+    MatrixAdd((float*)Temp8, (float*)Temp3, row1, col1, (float*)x_hat); // x_hat = Temp8 + Temp3
+    MatrixPrint((float*) x_hat, row1, col1);
+    
+    MatrixCopy((float*)x_hat, row1, col1, (float*)x_hat_kn1);
+    MatrixPrint((float*)x_hat_kn1, row1, col1);
     
     return(1);
     
@@ -186,4 +243,21 @@ void MatrixSubtract(float* A, float* B, int m, int n, float* C)
 	for (i = 0; i < m; i++)
 		for(j = 0; j < n; j++)
 			C[n * i + j] = A[n * i + j] - B[n * i + j];
+}
+
+void MatrixScale(float* A, int m, int n, float k, float* C)
+{
+	for (int i = 0; i < m; i++)
+		for (int j = 0; j < n; j++)
+			C[n * i + j] = A[n * i + j] * k;
+}
+
+void MatrixCopy(float* A, int n, int m, float* B)
+{
+	int i, j;
+	for (i = 0; i < m; i++)
+		for(j = 0; j < n; j++)
+		{
+			B[n * i + j] = A[n * i + j];
+		}
 }
