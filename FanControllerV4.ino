@@ -1281,7 +1281,10 @@ void drawMPC()
     strcpy(str,"Simple MPC");
     printTextBox(20, 25, ILI9341_BLACK, BGCOLOR, str, 32, 13);
     
-    calcMPC();
+    //calcMPC();
+    Mpc1.calculate();
+    
+    /*
     
     for(int i=0; i<NP-1; i++)
     {   tft.fillRect(20+(i*20), 100-(int)Y_ref_kn1[i][1], 5, 5, ILI9341_WHITE);
@@ -1300,7 +1303,8 @@ void drawMPC()
         tft.drawLine(20, 202, 200, 202, ILI9341_BLACK);
         tft.fillRect(20+(i*20), 200-(int)deltaU_opt[i][1], 5, 5, ILI9341_BLUE);
     }
-
+*/
+    
 }
 
 void drawClock(int h, int m, int s, int center_x, int center_y)
