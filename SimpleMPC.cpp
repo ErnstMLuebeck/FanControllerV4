@@ -37,20 +37,12 @@ SimpleMpc::SimpleMpc()
 }
 
 
-void SimpleMpc::calculate()
+void SimpleMpc::calculate(float _y_sensor)
 {
     Serial.println("Calc MPC:");
     
-    for(int i=0; i<NP; i++)
-    {   Serial.print(Y_ref[i]);
-        Serial.print(" ");
-    }
-    Serial.println();
-    
-    MatrixPrint((float*)Y_ref, NP, 1);
-    
     /* Read in sensor: y_sensor = */
-    //y_sensor = SI_TIn;
+    y_sensor = _y_sensor;
     
     /* Generate reference trajectory: Y_ref =
     MatrixCopy((float*)Y_ref, NP, 1, (float*)Y_ref_kn1);
@@ -84,7 +76,7 @@ void SimpleMpc::calculate()
     col2 = 1;
     float Temp1[row1][col2];    
     MatrixMultiply((float*)F, (float*)x_hat_kn1, row1, col1, col2, (float*)Temp1); // F*x_hat_kn1 
-    MatrixPrint((float*) Temp1, row1, col2);
+    //MatrixPrint((float*) Temp1, row1, col2);
        
     row1 = NP;
     col1 = 1;
@@ -92,7 +84,7 @@ void SimpleMpc::calculate()
     col2 = 1;
     float Temp2[row1][col1]; 
     MatrixSubtract((float*) Y_ref, (float*) Temp1, row1, col1, (float*) Temp2); // Y_ref - Temp1
-    MatrixPrint((float*) Temp2, row1, col1);
+    //MatrixPrint((float*) Temp2, row1, col1);
     
     row1 = NP;
     col1 = NP;
@@ -101,7 +93,7 @@ void SimpleMpc::calculate()
     //float deltaU_opt[row1][col2];
     MatrixCopy((float*)deltaU_opt, row1, col2, (float*)deltaU_opt_kn1); // deltaU_opt_kn1 = deltaU_opt;
     MatrixMultiply((float*)Hinv_PhiT, (float*)Temp2, row1, col1, col2, (float*)deltaU_opt); // Hinv_PhiT * Temp2 
-    MatrixPrint((float*)deltaU_opt, row1, col2);
+    //MatrixPrint((float*)deltaU_opt, row1, col2);
     
     float u_opt = deltaU_opt[0];
     //printf("\n%f\n",u_opt);
@@ -141,7 +133,7 @@ void SimpleMpc::calculate()
     col2 = 1;
     float Temp3[row1][col1];
     MatrixScale((float*)B, row1, col1, u_opt, (float*)Temp3); // B*u_opt
-    MatrixPrint((float*)Temp3, row1, col1);
+    //MatrixPrint((float*)Temp3, row1, col1);
     
     row1 = NX;
     col1 = NU;
@@ -149,7 +141,7 @@ void SimpleMpc::calculate()
     col2 = 1;
     float Temp4[row1][col1];
     MatrixScale((float*)L, row1, col1, y_sensor, (float*)Temp4); // L*y_sensor
-    MatrixPrint((float*)Temp4, row1, col1);
+    //MatrixPrint((float*)Temp4, row1, col1);
     
 
     row1 = NX;
@@ -158,7 +150,7 @@ void SimpleMpc::calculate()
     col2 = NX;
     float Temp5[row1][col2];
     MatrixMultiply((float*)L, (float*)C, row1, col1, col2, (float*)Temp5); // L*C
-    MatrixPrint((float*)Temp5, row1, col2);
+    //MatrixPrint((float*)Temp5, row1, col2);
     
     row1 = NX;
     col1 = NX;
@@ -166,7 +158,7 @@ void SimpleMpc::calculate()
     col2 = NX;
     float Temp6[row1][col1]; 
     MatrixSubtract((float*) A, (float*) Temp5, row1, col1, (float*) Temp6); // A-Temp5
-    MatrixPrint((float*) Temp6, row1, col1);
+    //MatrixPrint((float*) Temp6, row1, col1);
     
     row1 = NX;
     col1 = NX;
@@ -174,7 +166,7 @@ void SimpleMpc::calculate()
     col2 = 1;
     float Temp7[row1][col2];
     MatrixMultiply((float*)Temp6, (float*)x_hat_kn1, row1, col1, col2, (float*)Temp7); // Temp6*x_hat_kn1
-    MatrixPrint((float*)Temp7, row1, col2);
+    //MatrixPrint((float*)Temp7, row1, col2);
     
     row1 = NX;
     col1 = 1;
@@ -182,7 +174,7 @@ void SimpleMpc::calculate()
     col2 = 1;
     float Temp8[row1][col1]; 
     MatrixAdd((float*)Temp7, (float*)Temp4, row1, col1, (float*)Temp8); // Temp7 + Temp4
-    MatrixPrint((float*) Temp8, row1, col1);
+    //MatrixPrint((float*) Temp8, row1, col1);
     
     row1 = NX;
     col1 = 1;
@@ -192,7 +184,7 @@ void SimpleMpc::calculate()
     MatrixPrint((float*) x_hat, row1, col1);
     
     MatrixCopy((float*)x_hat, row1, col1, (float*)x_hat_kn1); // x_hat_kn1 = x_hat
-    MatrixPrint((float*)x_hat_kn1, row1, col1);
+    //MatrixPrint((float*)x_hat_kn1, row1, col1);
     
 }
 

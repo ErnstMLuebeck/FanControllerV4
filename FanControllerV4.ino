@@ -1280,28 +1280,26 @@ void drawMPC()
 {   char str[32];
     strcpy(str,"Simple MPC");
     printTextBox(20, 25, ILI9341_BLACK, BGCOLOR, str, 32, 13);
+    
+    int dotSize = 3;
 
     for(int i=0; i<NP; i++)
-    {   tft.fillRect(20+(i*20), 100-(int)Y_ref_g[i], 5, 5, ILI9341_WHITE);
-
+    {   tft.fillRect(20+(i*20), 100-(int)(Y_ref_g[i]*2), dotSize, dotSize, ILI9341_WHITE);
     }
     
+    // rotate Yref buffer
     float acc = Y_ref_g[0];
     for(int i=0; i<NP-1; i++)
     {   Y_ref_g[i] = Y_ref_g[i+1];
     }
     Y_ref_g[NP-1] = acc;
     
-    for(int i=0; i<NP; i++)
-    {   //Y_ref_g[i] = i;
-        Serial.print(Y_ref_g[i]);
-        Serial.print(" ");
-    }
-    Serial.println();
-    
     //Mpc1.setYrefReceeding(6.0);
     Mpc1.setYref((float*) Y_ref_g);
-    Mpc1.calculate();
+    Mpc1.calculate(0);
+    
+    float Y_opt_temp[NP];
+    Mpc1.getYopt((float*) Y_opt_temp);
 
     float Y_opt_kn1_temp[NP];
     Mpc1.getYoptKn1((float*) Y_opt_kn1_temp);
@@ -1309,27 +1307,36 @@ void drawMPC()
     float U_opt_kn1_temp[NP];
     Mpc1.getUoptKn1((float*) U_opt_kn1_temp);
     
-    float Y_opt_temp[NP];
     Mpc1.getYopt((float*) Y_opt_temp);
     
     float U_opt_temp[NP];
     Mpc1.getUopt((float*) U_opt_temp);
     
+    for(int i=0; i<NP-1; i++)
+    {   tft.drawLine(20+(i*20), 200-(int)U_opt_kn1_temp[i], 20+((i+1)*20), 200-(int)U_opt_kn1_temp[i+1], ILI9341_WHITE);
+        tft.drawLine(20+(i*20), 100-(int)(Y_opt_kn1_temp[i]*2), 20+((i+1)*20), 100-(int)(Y_opt_kn1_temp[i+1]*2), ILI9341_WHITE);
+    }
+    
     for(int i=0; i<NP; i++)
     {   //tft.fillRect(20+(i*20), 100-(int)Y_ref_kn1[i][1], 5, 5, ILI9341_WHITE);
-        tft.fillRect(20+(i*20), 100-(int)Y_opt_kn1_temp[i], 5, 5, ILI9341_WHITE);
-        tft.fillRect(20+(i*20), 200-(int)U_opt_kn1_temp[i], 5, 5, ILI9341_WHITE);
+        tft.fillRect(20+(i*20), 100-(int)(Y_opt_kn1_temp[i]*2), dotSize, dotSize, ILI9341_WHITE);
+        tft.fillRect(20+(i*20), 200-(int)U_opt_kn1_temp[i], dotSize, dotSize, ILI9341_WHITE);
         
         // Y_ref trajectory
-        tft.drawLine(20, 102, 200, 102, ILI9341_BLACK);
-        tft.fillRect(20+(i*20), 100-(int)Y_ref_g[i], 5, 5, ILI9341_RED);
+        tft.drawLine(20, 102, 250, 102, ILI9341_BLACK);
+        tft.fillRect(20+(i*20), 100-(int)(Y_ref_g[i]*2), dotSize, dotSize, ILI9341_RED);
         
         // Y_opt trajectory
-        tft.fillRect(20+(i*20), 100-(int)Y_opt_temp[i], 5, 5, ILI9341_GREEN);
+        tft.fillRect(20+(i*20), 100-(int)(Y_opt_temp[i]*2), dotSize, dotSize, ILI9341_GREEN);
         
         // u_opt
-        tft.drawLine(20, 202, 200, 202, ILI9341_BLACK);
-        tft.fillRect(20+(i*20), 200-(int)U_opt_temp[i], 5, 5, ILI9341_BLUE);
+        tft.drawLine(20, 202, 250, 202, ILI9341_BLACK);
+        tft.fillRect(20+(i*20), 200-(int)U_opt_temp[i], dotSize, dotSize, ILI9341_BLUE);
+    }
+    
+    for(int i=0; i<NP-1; i++)
+    {   tft.drawLine(20+(i*20), 200-(int)U_opt_temp[i], 20+((i+1)*20), 200-(int)U_opt_temp[i+1], ILI9341_BLUE);
+        tft.drawLine(20+(i*20), 100-(int)(Y_opt_temp[i]*2), 20+((i+1)*20), 100-(int)(Y_opt_temp[i+1]*2), ILI9341_GREEN);
     }
     
 }

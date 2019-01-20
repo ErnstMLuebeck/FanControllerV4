@@ -14,7 +14,7 @@ class SimpleMpc
 {
 public:
     SimpleMpc();
-    void calculate();
+    void calculate(float _y_sensor);
     void setYrefReceeding(float _y_ref);
     void setYref(float* _Y_ref);
     void getYopt(float* _Y_opt);
