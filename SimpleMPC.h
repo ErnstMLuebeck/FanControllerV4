@@ -18,6 +18,9 @@ public:
     void setYrefReceeding(float _y_ref);
     void setYref(float* _Y_ref);
     void getYopt(float* _Y_opt);
+    void getYoptKn1(float* _Y_opt_kn1);
+    void getUopt(float* _U_opt);
+    void getUoptKn1(float* _U_opt_kn1);
     
 private:
     void MatrixMultiply(float* A, float* B, int m, int p, int n, float* C);
@@ -59,12 +62,12 @@ private:
     
     float Y_ref_kn1[NP][1] = {{0}};
     
-    float Y_opt[NP] = {{0}};
-    float Y_opt_kn1[NP] = {{0}};
+    float Y_opt[NP] = {0};
+    float Y_opt_kn1[NP] = {0};
     
-    float deltaU_opt[NP][NU] = {{0}};
+    float deltaU_opt[NP] = {0};
     
-    float deltaU_opt_kn1[NP][NU] = {{0}};
+    float deltaU_opt_kn1[NP] = {0};
     
     float qy = 1;
     float ru = 0.005;

@@ -77,7 +77,7 @@ void SimpleMpc::calculate()
     MatrixMultiply((float*)Hinv_PhiT, (float*)Temp2, row1, col1, col2, (float*)deltaU_opt); // Hinv_PhiT * Temp2 
     MatrixPrint((float*)deltaU_opt, row1, col2);
     
-    float u_opt = deltaU_opt[0][0];
+    float u_opt = deltaU_opt[0];
     //printf("\n%f\n",u_opt);
     Serial.println();
     Serial.println(u_opt,4);
@@ -342,6 +342,37 @@ void SimpleMpc::getYopt(float* _Y_opt)
     for (int ii = 0; ii < NP; ii++)
         _Y_opt[ii] = Y_opt[ii];
 }
+
+void SimpleMpc::getUopt(float* _U_opt)
+{
+    for (int ii = 0; ii < NP; ii++)
+        _U_opt[ii] = deltaU_opt[ii];
+}
+
+void SimpleMpc::getYoptKn1(float* _Y_opt_kn1)
+{
+    for (int ii = 0; ii < NP; ii++)
+        _Y_opt_kn1[ii] = Y_opt_kn1[ii];
+}
+
+void SimpleMpc::getUoptKn1(float* _U_opt_kn1)
+{
+    for (int ii = 0; ii < NP; ii++)
+        _U_opt_kn1[ii] = deltaU_opt_kn1[ii];
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
