@@ -15,6 +15,9 @@ class SimpleMpc
 public:
     SimpleMpc();
     void calculate();
+    void setYrefReceeding(float _y_ref);
+    void setYref(float* _Y_ref);
+    void getYopt(float* _Y_opt);
     
 private:
     void MatrixMultiply(float* A, float* B, int m, int p, int n, float* C);
@@ -52,60 +55,22 @@ private:
         {0},
         {0}};
     
-    float Y_ref[NP*NY][1] = {
-        {0},
-        {0},
-        {0},
-        {0},
-        {0},
-        {10},
-        {10},
-        {10},
-        {10},
-        {10}};
+    float Y_ref[NP] = {{0}};
     
-    float Y_ref_kn1[NP*NY][1] = {
-        {0},
-        {0},
-        {0},
-        {0},
-        {0},
-        {10},
-        {10},
-        {10},
-        {10},
-        {10}};
+    float Y_ref_kn1[NP][1] = {{0}};
     
-    float Y_opt[NP*NY][1] = {{0}};
-    float Y_opt_kn1[NP*NY][1] = {{0}};
+    float Y_opt[NP] = {{0}};
+    float Y_opt_kn1[NP] = {{0}};
     
-    float deltaU_opt[NP][NU] = {
-        {0},
-        {0},
-        {0},
-        {0},
-        {0},
-        {0},
-        {0},
-        {0},
-        {0},
-        {0}};
+    float deltaU_opt[NP][NU] = {{0}};
     
-    float deltaU_opt_kn1[NP][NU] = {
-        {0},
-        {0},
-        {0},
-        {0},
-        {0},
-        {0},
-        {0},
-        {0},
-        {0},
-        {0}};
+    float deltaU_opt_kn1[NP][NU] = {{0}};
     
     float qy = 1;
     float ru = 0.005;
     
+    float F[NP*NY][NX] = {{0}};
+    /*
     float F[NP*NY][NX] = {
         {-0.264935531551847, 0.790119332570092},
         {-0.40937447257848, 0.65427007769624},
@@ -117,6 +82,7 @@ private:
         {-0.77215102610405, 0.00527674397218261},
         {-0.765954042470623, -0.0672465803064527},
         {-0.746330869701793, -0.128985147381839}};
+    */
     
     float Phi[NP*NY][NP*NU] = {
         {0.0178948665349633, 0, 0, 0, 0, 0, 0, 0, 0, 0},

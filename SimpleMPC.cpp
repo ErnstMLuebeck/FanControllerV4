@@ -5,7 +5,7 @@ SimpleMpc::SimpleMpc()
 {
     Serial.println("MPC Constructor:");
     
-    //calcMpcF((float*)A, (float*)C, NX, NY, NP, (float*)F);
+    calcMpcF((float*)A, (float*)C, NX, NY, NP, (float*)F);
     MatrixPrint((float*)F, NP*NY, NX);
     
 }
@@ -13,11 +13,20 @@ SimpleMpc::SimpleMpc()
 
 void SimpleMpc::calculate()
 {
+    Serial.println("Calc MPC:");
+    
+    for(int i=0; i<NP; i++)
+    {   Serial.print(Y_ref[i]);
+        Serial.print(" ");
+    }
+    Serial.println();
+    
+    MatrixPrint((float*)Y_ref, NP, 1);
     
     /* Read in sensor: y_sensor = */
     //y_sensor = SI_TIn;
     
-    /* Generate reference trajectory: Y_ref = */
+    /* Generate reference trajectory: Y_ref =
     MatrixCopy((float*)Y_ref, NP, 1, (float*)Y_ref_kn1);
     float acc = Y_ref[0][1];
     for(int i=0; i<NP-1; i++)
@@ -26,7 +35,9 @@ void SimpleMpc::calculate()
     Y_ref[NP-1][1] = acc;
     
     MatrixPrint((float*)Y_ref, NP, 1);
-    
+    */
+     
+     
     /* Calculate MPC equation: u_opt = */
     
     /* Update Observer: x_hat = */
@@ -306,7 +317,31 @@ void SimpleMpc::calcMpcPhi(float* A, float* B, float* C, int nx, int ny, int nu,
     */
 }
 
+void SimpleMpc::setYrefReceeding(float _y_ref)
+{
+    float acc = Y_ref[0];
+    for(int i=0; i<NP-1; i++)
+    {   Y_ref[i] = Y_ref[i+1];
+    }
+    Y_ref[NP-1] = _y_ref;
+}
 
+void SimpleMpc::setYref(float* _Y_ref)
+{
+    Serial.println("setYref:");
+    for(int i=0; i<NP; i++)
+    {   Y_ref[i] = _Y_ref[i];
+        Serial.print(_Y_ref[i]);
+        Serial.print(" ");
+        Serial.println();
+    }
+}
+
+void SimpleMpc::getYopt(float* _Y_opt)
+{
+    for (int ii = 0; ii < NP; ii++)
+        _Y_opt[ii] = Y_opt[ii];
+}
 
 
 
