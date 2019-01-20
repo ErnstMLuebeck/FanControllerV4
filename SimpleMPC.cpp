@@ -5,8 +5,11 @@ SimpleMpc::SimpleMpc()
 {
     Serial.println("MPC Constructor:");
     
-    calcMpcF((float*)A, (float*)C, NX, NY, NP, (float*)F);
-    MatrixPrint((float*)F, NP*NY, NX);
+    calcF((float*)A, (float*)C, NX, NY, NP, (float*)F);
+    MatrixPrint((float*)F, NP, NX);
+    
+    calcPhi((float*) A, (float*) B, (float*) C, NX, NY, NU, NP, (float*) Phi);
+    MatrixPrint((float*)Phi, NP, NP);
     
 }
 
@@ -252,7 +255,7 @@ void SimpleMpc::MatrixCopy(float* A, int n, int m, float* B)
 		}
 }
 
-void SimpleMpc::calcMpcF(float* A, float* C, int nx, int ny, int np, float* F)
+void SimpleMpc::calcF(float* A, float* C, int nx, int ny, int np, float* F)
 {
     float Temp[nx][ny];
     float Temp1[nx][ny];
@@ -272,49 +275,62 @@ void SimpleMpc::calcMpcF(float* A, float* C, int nx, int ny, int np, float* F)
     }
 }
 
-void SimpleMpc::calcMpcPhi(float* A, float* B, float* C, int nx, int ny, int nu, int np, float* Phi)
+void SimpleMpc::calcPhi(float* A, float* B, float* C, int nx, int ny, int nu, int np, float* Phi)
 {
-    float firstColPhi[np*ny][nu];
+    //delay(100);
+    float firstColPhi[np];
     
     // firstColPhi(1:NY,:) = C*B;
-    float Temp;
-    //MatrixMultiply((float*)C, (float*)B, ny, nx, nu, (float*)Temp);
+    float Temp[1];
+    MatrixMultiply((float*)C, (float*)B, ny, nx, nu, (float*)Temp);
     
-    firstColPhi[0][0] = Temp;
+    firstColPhi[0] = Temp[0];
     
     float Temp1[ny][nx];
+    float Temp2[ny][nx];
     
     // Temp = C; % [NY x NX]
     MatrixCopy((float*)C, ny, nx, (float*)Temp1);
     
-    /*
+    float Temp3[1];
+    MatrixMultiply((float*)C, (float*)B, ny, nx, nu, (float*)Temp3);
+    
+    firstColPhi[0] = Temp3[0];
+    
+    
     for(int i=1; i<np; i++)
     {
         // Temp1 = Temp1 * A;
         MatrixMultiply((float*)Temp1, (float*)A, ny, nx, nx, (float*)Temp2);
-        MatrixCopy((float*)Temp2, ny, nx, (float*)Temp1);
+        MatrixCopy((float*)Temp2, ny, nx, (float*)Temp1); // = F
+        // MatrixPrint((float*)Temp2, ny, nx); // =F
         
         // Temp2 = Temp1 * B;
-        MatrixMultiply((float*)Temp3, (float*)B, ny, nx, nu, (float*)Temp4);
-        MatrixCopy((float*)Temp4, ny, nx, (float*)Temp3);
-    
-        for j=0:NY-1
-            firstColPhi(i*NY+j+1) = Temp2(j+1);
-        end
+        MatrixMultiply((float*)Temp2, (float*)B, ny, nx, nu, (float*)Temp3);
+
+        //Serial.println(Temp3[0],4);
+        
+        firstColPhi[i] = Temp3[0];
     }
     
-    offs = 0;
-    for i=0:NP*NU-1
-        for k=0:NP*NY-1
-            if k>=offs
-                % go along rows
-                Phi(k*NP+(i+1)) = firstColPhi((k-offs+1));
-            end
-        end
-        offs = offs + 1;
-    end
-    Phi'
-    */
+    MatrixPrint((float*)firstColPhi, NP, 1);
+    
+    int offs = 0;
+    for(int ii=0; ii<np*nu; ii++)
+    {
+        for(int k=0; k<np*ny; k++)
+        {
+            if(k>=offs)
+            {
+                Phi[k*NP+ii] = firstColPhi[k-offs];
+            }
+        }
+        offs += 1;
+    }
+    
+    //delay(100);
+    MatrixPrint((float*)Phi, np, np);
+
 }
 
 void SimpleMpc::setYrefReceeding(float _y_ref)
