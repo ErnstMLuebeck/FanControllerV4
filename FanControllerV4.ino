@@ -49,6 +49,7 @@
 #include "MovgAvgFilter.h"
 #include "SimpleNeurNet.h"
 #include "SimpleMPC.h"
+#include "KalmanFilter.h"
 
 #include "ecu_reader.h"
 #include <FlexCAN.h>
@@ -249,6 +250,10 @@ void loop()
           {   UI = UI_MPC;
               buildUI(UI);
           }
+          else if(TC_IsTouchedId == 7)
+          {   UI = UI_KALM;
+              buildUI(UI);
+          }
 
       }
       else if(UI == UI_INFO)
@@ -282,6 +287,12 @@ void loop()
           }
       }
       else if(UI == UI_MPC)
+      {   if(TC_IsTouchedId == 0)
+          {   UI = UI_MENU;
+              buildUI(UI);
+          }
+      }
+      else if(UI == UI_KALM)
       {   if(TC_IsTouchedId == 0)
           {   UI = UI_MENU;
               buildUI(UI);
@@ -939,6 +950,7 @@ void refreshUI(int ui_id)
         case UI_CAN: plotCanData(CAN_SpdEng, CAN_TqEng); break;
         case UI_NN: drawNeurNet(); break;
         case UI_MPC: drawMPC(); break;
+        case UI_KALM: drawKalman(); break;
         default: break;
     }
     
@@ -977,6 +989,9 @@ void buildUI(int ui_id)
         
         strcpy(label1,"MPC");
         addButton(6, 20, 190, 120, 40, label1);
+
+        strcpy(label1,"Kalman");
+        addButton(7, 170, 190, 120, 40, label1);
     }
 
     if(ui_id == UI_SETTINGS0)
@@ -1067,7 +1082,11 @@ void buildUI(int ui_id)
         char label7[10] = "H";
         addButton(0, 260, 25, 40, 40, label7);
     }
-
+    if(ui_id == UI_KALM)
+    {
+        char label7[10] = "H";
+        addButton(0, 260, 25, 40, 40, label7);
+    }
     if(ui_id == UI_KEYPAD)
     {
         char label8[10] = "1";
@@ -1338,6 +1357,19 @@ void drawMPC()
     {   tft.drawLine(20+(i*20), 200-(int)U_opt_temp[i], 20+((i+1)*20), 200-(int)U_opt_temp[i+1], ILI9341_BLUE);
         tft.drawLine(20+(i*20), 100-(int)(Y_opt_temp[i]*2), 20+((i+1)*20), 100-(int)(Y_opt_temp[i+1]*2), ILI9341_GREEN);
     }
+    
+}
+
+void drawKalman()
+{   char str[32];
+    strcpy(str,"Kalman Filter");
+    printTextBox(20, 25, ILI9341_BLACK, BGCOLOR, str, 32, 13);
+
+    float x_kalm[NX][1];
+    float x_sens[NZ][1];
+    float u_kn1[NU][1] = {{1}};
+
+    Kalman1.calculate((float*) x_kalm, (float*) x_sens, (float*)u_kn1);
     
 }
 

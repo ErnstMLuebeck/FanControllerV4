@@ -42,6 +42,7 @@ List SettingsList = List();
 #define UI_CAN 7
 #define UI_NN 8
 #define UI_MPC 9
+#define UI_KALM 10
 
 int UI = UI_MENU;
 
@@ -80,6 +81,8 @@ MovgAvgFilter TInMAFilter = MovgAvgFilter();
 MovgAvgFilter HumInMAFilter = MovgAvgFilter();
 
 SimpleMpc Mpc1 = SimpleMpc();
+
+KalmanFilter Kalman1 = KalmanFilter();
 
 float Y_ref_g[NP] = {0,0,0,0,0,10,10,10,10,10};
 
