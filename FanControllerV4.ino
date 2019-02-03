@@ -50,6 +50,7 @@
 #include "SimpleNeurNet.h"
 #include "SimpleMPC.h"
 #include "KalmanFilter.h"
+#include "StateSpaceModel.h"
 
 #include "ecu_reader.h"
 #include <FlexCAN.h>
@@ -1365,11 +1366,20 @@ void drawKalman()
     strcpy(str,"Kalman Filter");
     printTextBox(20, 25, ILI9341_BLACK, BGCOLOR, str, 32, 13);
 
-    float x_kalm[NX][1];
+    float x_plant[NX][1];
     float x_sens[NZ][1];
+    float x_kalm[NX][1];
+
+    float u_k[NU][1] = {{1}};
     float u_kn1[NU][1] = {{1}};
 
-    Kalman1.calculate((float*) x_kalm, (float*) x_sens, (float*)u_kn1);
+    PlantModel.calculate((float*)u_k);
+    PlantModel.getStates((float*)x_plant);
+
+    x_sens[0][0] = x_plant[0][0];
+
+    Kalman1.calculate((float*)x_sens, (float*)u_kn1);
+    Kalman1.getStates((float*)x_kalm);
     
 }
 

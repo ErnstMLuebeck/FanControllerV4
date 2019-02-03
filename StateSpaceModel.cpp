@@ -1,39 +1,21 @@
-#include "KalmanFilter.h"
+#include "StateSpaceModel.h"
 
-/* 
-% MATLAB Implementation
-function [x_kalm, P, K] = kalmanfilter(x_kn1, P_kn1, x_sens, u_kn1, A, B, Q, R, H)
-
-   % Prediction for state vector and covariance
-   x_hat = A*x_kn1 + B*u_kn1;
-   P = A*P_kn1*A' + Q;
-
-   % Compute Kalman gain factor
-   S = (H*P*H'+R);
-   K = P*H'*S^-1;
-
-   % Correction based on observation
-   x_kalm = x_hat + K*(x_sens-H*x_hat);
-   P = P - K*H*P;
-   
-end
+/*
+% Plant model --------------------------------------------------------------    
+w_kn1 = sigmaQ*randn(Nx,1); % process noise p(w)~N(0,Q)
+x_plant = A*x_plant_kn1 + B*du(:,k) + w_kn1;
+x_true(:,k) = x_plant_kn1;
+x_plant_kn1 = x_plant;
 */
 
-KalmanFilter::KalmanFilter()
+StateSpaceModel::StateSpaceModel()
 {   
-    int row1 = NX;
-    int col1 = NX;
-    MatrixTranspose((float*) A, row1, col1, (float*) AT);
-
-    row1 = NZ;
-    col1 = NX;
-    MatrixTranspose((float*) H, row1, col1, (float*) HT);
 }
 
 
-void KalmanFilter::calculate(float* x_sens, float* u_kn1)
+void StateSpaceModel::calculate(float* u_k)
 {  
-    /* x_hat = A*x_kn1 + B*u_kn1; */
+    /* x_k = A*x_kn1 + B*u_k; */
 
     int row1 = NX;
     int col1 = NX;
@@ -47,147 +29,47 @@ void KalmanFilter::calculate(float* x_sens, float* u_kn1)
     col1 = NU;
     row2 = NU;
     col2 = 1;
-    float B_u_kn1[row1][col2];
-    MatrixMultiply((float*)B, (float*)u_kn1, row1, col1, col2, (float*)B_u_kn1); 
-    //MatrixPrint((float*)B_u_kn1, row1, col2);
+    float B_u_k[row1][col2];
+    MatrixMultiply((float*)B, (float*)u_k, row1, col1, col2, (float*)B_u_k); 
+    //MatrixPrint((float*)B_u_k, row1, col2);
+
+    /* y_k = C*x_kn1; */
+
+    row1 = NY;
+    col1 = NX;
+    row2 = NX;
+    col2 = 1;
+    MatrixMultiply((float*)C, (float*)x_kn1, row1, col1, col2, (float*)y_k); 
+    //MatrixPrint((float*)y_k, row1, col2);
 
     row1 = NX;
     col1 = 1;
     row2 = NX;
     col2 = 1;
-    float x_hat[row1][col1]; 
-    MatrixAdd((float*)A_x_kn1, (float*)B_u_kn1, row1, col1, (float*)x_hat);
-    //MatrixPrint((float*) x_hat, row1, col1);
-
-    /* P = A*P_kn1*A' + Q; */
-
-    row1 = NX;
-    col1 = NX;
-    row2 = NX;
-    col2 = NX;
-    float A_P_kn1[row1][col2];
-    MatrixMultiply((float*)A, (float*)P_kn1, row1, col1, col2, (float*)A_P_kn1); 
-    //MatrixPrint((float*)A_P_kn1, row1, col2);
-
-    row1 = NX;
-    col1 = NX;
-    row2 = NX;
-    col2 = NX;
-    float A_P_kn1_AT[row1][col2];
-    MatrixMultiply((float*)A_P_kn1, (float*)AT, row1, col1, col2, (float*)A_P_kn1_AT); 
-    //MatrixPrint((float*)A_P_kn1_AT, row1, col2);
-
-    row1 = NX;
-    col1 = NX;
-    row2 = NX;
-    col2 = NX;
-    MatrixAdd((float*)A_P_kn1_AT, (float*)Q, row1, col1, (float*)P);
-    //MatrixPrint((float*) P, row1, col1);
-
-    /* S = (H*P*H'+R); */
-
-    row1 = NX;
-    col1 = NX;
-    row2 = NX;
-    col2 = NZ;
-    float P_HT[row1][col2];
-    MatrixMultiply((float*)P, (float*)HT, row1, col1, col2, (float*)P_HT); 
-    //MatrixPrint((float*)P_HT, row1, col2);
-
-    row1 = NZ;
-    col1 = NX;
-    row2 = NX;
-    col2 = NZ;
-    float H_P_HT[row1][col2];
-    MatrixMultiply((float*)H, (float*)P_HT, row1, col1, col2, (float*)H_P_HT); 
-    //MatrixPrint((float*)H_P_HT, row1, col2);
-
-    row1 = NZ;
-    col1 = NZ;
-    row2 = NZ;
-    col2 = NZ;
-    float S[NZ][NZ];
-    MatrixAdd((float*)H_P_HT, (float*)R, row1, col1, (float*)S);
-    //MatrixPrint((float*) S, row1, col1);
-
-    /* K = P*H'*S^-1; */
-
-    MatrixInvert((float*) S, NZ); // Sinv
-    //MatrixPrint((float*) S, row1, col1);
-
-    row1 = NX;
-    col1 = NZ;
-    row2 = NZ;
-    col2 = NZ;
-    MatrixMultiply((float*)P_HT, (float*)S, row1, col1, col2, (float*)K); 
-    //MatrixPrint((float*)K, row1, col2);
-
-    /* x_kalm = x_hat + K*(x_sens-H*x_hat); */
-
-    row1 = NZ;
-    col1 = NX;
-    row2 = NX;
-    col2 = 1;
-    float H_x_hat[row1][col2];
-    MatrixMultiply((float*)H, (float*)x_hat, row1, col1, col2, (float*)H_x_hat); 
-    //MatrixPrint((float*)H_x_hat, row1, col2);
-
-    row1 = NZ;
-    col1 = 1;
-    row2 = NZ;
-    col2 = 1;
-    float Temp1[row1][col1]; 
-    MatrixSubtract((float*)x_sens, (float*)H_x_hat, row1, col1, (float*) Temp1);
-    //MatrixPrint((float*) Temp1, row1, col1);
-
-    row1 = NX;
-    col1 = NZ;
-    row2 = NZ;
-    col2 = 1;
-    float Temp2[row1][col2];
-    MatrixMultiply((float*)K, (float*)Temp1, row1, col1, col2, (float*)Temp2); 
-    //MatrixPrint((float*)Temp2, row1, col2);
-
-    row1 = NX;
-    col1 = 1;
-    MatrixAdd((float*)x_hat, (float*)Temp2, row1, col1, (float*)x_kn1); // = x_kalm
+    MatrixAdd((float*)A_x_kn1, (float*)B_u_k, row1, col1, (float*)x_kn1);
     //MatrixPrint((float*) x_kn1, row1, col1);
-    
-    /* P = P - K*H*P; */
-
-    row1 = NZ;
-    col1 = NX;
-    row2 = NX;
-    col2 = NX;
-    float H_P[row1][col2];
-    MatrixMultiply((float*)H, (float*)P, row1, col1, col2, (float*)H_P); 
-    //MatrixPrint((float*)H_P, row1, col2);
-
-    row1 = NX;
-    col1 = NZ;
-    row2 = NZ;
-    col2 = NX;
-    float K_H_P[row1][col2];
-    MatrixMultiply((float*)K, (float*)H_P, row1, col1, col2, (float*)K_H_P); 
-    //MatrixPrint((float*)K_H_P, row1, col2);
-
-    row1 = NX;
-    col1 = NX;
-    MatrixSubtract((float*)P, (float*)K_H_P, row1, col1, (float*) P_kn1);
-    //MatrixPrint((float*) P_kn1, row1, col1);
 
 }
 
-void KalmanFilter::getStates(float* x)
+void StateSpaceModel::getStates(float* _x_k)
 {
     int row1 = NX;
     int col1 = 1;
-    MatrixCopy((float*)x_kn1, row1, col1, (float*)x);
+    MatrixCopy((float*)x_kn1, row1, col1, (float*)_x_k);
 
     MatrixPrint((float*) x_kn1, row1, col1);
 }
 
-void KalmanFilter::MatrixMultiply(float* A, float* B, int m, int p, int n, float* C)
+void StateSpaceModel::getOutputs(float* _y_k)
+{
+    int row1 = NY;
+    int col1 = 1;
+    MatrixCopy((float*)y_k, row1, col1, (float*)_y_k);
+
+    MatrixPrint((float*) y_k, row1, col1);
+}
+
+void StateSpaceModel::MatrixMultiply(float* A, float* B, int m, int p, int n, float* C)
 {   // MatrixMath.cpp Library for Matrix Math
 	// A = input matrix (m x p)
 	// B = input matrix (p x n)
@@ -205,7 +87,7 @@ void KalmanFilter::MatrixMultiply(float* A, float* B, int m, int p, int n, float
 		}
 }
 
-void KalmanFilter::MatrixPrint(float* A, int m, int n)
+void StateSpaceModel::MatrixPrint(float* A, int m, int n)
 {
 	// A = input matrix (m x n)
 	int i, j;
@@ -224,7 +106,7 @@ void KalmanFilter::MatrixPrint(float* A, int m, int n)
 	}
 }
 
-void KalmanFilter::MatrixAdd(float* A, float* B, int m, int n, float* C)
+void StateSpaceModel::MatrixAdd(float* A, float* B, int m, int n, float* C)
 {
 	// A = input matrix (m x n)
 	// B = input matrix (m x n)
@@ -239,7 +121,7 @@ void KalmanFilter::MatrixAdd(float* A, float* B, int m, int n, float* C)
 
 
 //Matrix Subtraction Routine
-void KalmanFilter::MatrixSubtract(float* A, float* B, int m, int n, float* C)
+void StateSpaceModel::MatrixSubtract(float* A, float* B, int m, int n, float* C)
 {
 	// A = input matrix (m x n)
 	// B = input matrix (m x n)
@@ -252,14 +134,14 @@ void KalmanFilter::MatrixSubtract(float* A, float* B, int m, int n, float* C)
 			C[n * i + j] = A[n * i + j] - B[n * i + j];
 }
 
-void KalmanFilter::MatrixScale(float* A, int m, int n, float k, float* C)
+void StateSpaceModel::MatrixScale(float* A, int m, int n, float k, float* C)
 {
 	for (int i = 0; i < m; i++)
 		for (int j = 0; j < n; j++)
 			C[n * i + j] = A[n * i + j] * k;
 }
 
-void KalmanFilter::MatrixCopy(float* A, int n, int m, float* B)
+void StateSpaceModel::MatrixCopy(float* A, int n, int m, float* B)
 {
 	int i, j;
 	for (i = 0; i < m; i++)
@@ -269,7 +151,7 @@ void KalmanFilter::MatrixCopy(float* A, int n, int m, float* B)
 		}
 }
 
-void KalmanFilter::MatrixTranspose(float* A, int m, int n, float* C)
+void StateSpaceModel::MatrixTranspose(float* A, int m, int n, float* C)
 {
     // A = input matrix (m x n)
     // m = number of rows in A
@@ -288,7 +170,7 @@ void KalmanFilter::MatrixTranspose(float* A, int m, int n, float* C)
 //     NUMERICAL RECIPES: The Art of Scientific Computing.
 // * The function returns 1 on success, 0 on failure.
 // * NOTE: The argument is ALSO the result matrix, meaning the input matrix is REPLACED
-int KalmanFilter::MatrixInvert(float* A, int n)
+int StateSpaceModel::MatrixInvert(float* A, int n)
 {
     // A = input matrix AND result matrix
     // n = number of rows = number of columns in A (n x n)
