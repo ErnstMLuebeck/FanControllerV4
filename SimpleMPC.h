@@ -21,6 +21,7 @@ public:
     void getYoptKn1(float* _Y_opt_kn1);
     void getUopt(float* _U_opt);
     void getUoptKn1(float* _U_opt_kn1);
+    void getXhat(float* _x_opt);
     
 private:
     void MatrixMultiply(float* A, float* B, int m, int p, int n, float* C);
@@ -52,13 +53,8 @@ private:
     
     float y_sensor = 1;
     
-    float x_hat[NX][1] = {
-        {0},
-        {0}};
-    
-    float x_hat_kn1[NX][1] = {
-        {0},
-        {0}};
+    float x_hat[NX][1] = {{0}};
+    float x_hat_kn1[NX][1] = {{0}};
     
     float Y_ref[NP] = {0};
     float Y_ref_kn1[NP] = {0};

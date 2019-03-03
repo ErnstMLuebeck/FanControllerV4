@@ -498,7 +498,8 @@ void OS_60s()
     {   LogFile = SD.open("LOGFILE.txt", FILE_WRITE); // no '-' in filename
 
         if(LogFile)
-        {   //LogFile.println("2018-08-01; 15:27:23; 23.2; 48.3; 14.2; 34.5; 23.5; 16.4; 0; 12309;");
+        {   //LogFile.println("1551534329; 23.2; 48.3; 14.2; 34.5; 23.5; 16.4; 0; 12309;");
+            /*
             LogFile.print(SC_SysYear);
             LogFile.print("-");
             if(SC_SysMon < 10) LogFile.print("0");
@@ -512,6 +513,8 @@ void OS_60s()
             LogFile.print(SC_SysMin);
             LogFile.print(":");
             LogFile.print(SC_SysSec);
+            LogFile.print("; ");*/
+            LogFile.print(now()); /* elapsed seconds since 1.1.1970 */
             LogFile.print("; ");
             LogFile.print(SI_TInFilt,3);
             LogFile.print("; ");
@@ -1313,17 +1316,22 @@ void drawMPC()
     {   Y_ref_g[i] = Y_ref_g[i+1];
     }
     Y_ref_g[NP-1] = acc;
-    
-    //Mpc1.setYrefReceeding(6.0);
+
+    float y_plant[NY][1];
+    float y_plant_kn1[NY][1];
+    Serial.println("Y Plant:");
+    PlantModelMpc.getOutputs((float*)y_plant);
+    PlantModelMpc.getOutputsKn1((float*)y_plant_kn1);
+
     Mpc1.setYref((float*) Y_ref_g);
-    Mpc1.calculate(0);
-    
-    float Y_opt_temp[NP];
-    Mpc1.getYopt((float*) Y_opt_temp);
+    Mpc1.calculate(y_plant[0][0]);
 
     float Y_opt_kn1_temp[NP];
     Mpc1.getYoptKn1((float*) Y_opt_kn1_temp);
     
+    float Y_opt_temp[NP];
+    Mpc1.getYopt((float*) Y_opt_temp);
+
     float U_opt_kn1_temp[NP];
     Mpc1.getUoptKn1((float*) U_opt_kn1_temp);
     
@@ -1331,11 +1339,20 @@ void drawMPC()
     
     float U_opt_temp[NP];
     Mpc1.getUopt((float*) U_opt_temp);
+
+    float u_opt_k[NU][1];
+    u_opt_k[0][0] = U_opt_temp[0];
+
+    PlantModelMpc.calculate((float*)u_opt_k);
+
+    /* plot results */
     
     for(int i=0; i<NP-1; i++)
     {   tft.drawLine(20+(i*20), 200-(int)U_opt_kn1_temp[i], 20+((i+1)*20), 200-(int)U_opt_kn1_temp[i+1], ILI9341_WHITE);
         tft.drawLine(20+(i*20), 100-(int)(Y_opt_kn1_temp[i]*2), 20+((i+1)*20), 100-(int)(Y_opt_kn1_temp[i+1]*2), ILI9341_WHITE);
     }
+    // y_plant_kn1
+    tft.fillRect(20+(0*20), 100-(int)(y_plant_kn1[0][0]), dotSize, dotSize, ILI9341_WHITE);
     
     for(int i=0; i<NP; i++)
     {   //tft.fillRect(20+(i*20), 100-(int)Y_ref_kn1[i][1], 5, 5, ILI9341_WHITE);
@@ -1353,6 +1370,9 @@ void drawMPC()
         tft.drawLine(20, 202, 250, 202, ILI9341_BLACK);
         tft.fillRect(20+(i*20), 200-(int)U_opt_temp[i], dotSize, dotSize, ILI9341_BLUE);
     }
+
+    // y_plant
+    tft.fillRect(20+(0*20), 100-(int)(y_plant[0][0]), dotSize, dotSize, ILI9341_BLACK);
     
     for(int i=0; i<NP-1; i++)
     {   tft.drawLine(20+(i*20), 200-(int)U_opt_temp[i], 20+((i+1)*20), 200-(int)U_opt_temp[i+1], ILI9341_BLUE);
@@ -1518,7 +1538,7 @@ void initSdCard()
 
         // if the file opened okay, write to it:
         if (LogFile) 
-        {   LogFile.println("Datum; Zeit; TIn; HumIn; TDewIn; TOut; HumOut; TDewOut; StFan; TiFanOnTot;");
+        {   LogFile.println("Zeit; TIn; HumIn; TDewIn; TOut; HumOut; TDewOut; StFan; TiFanOnTot;");
 
             LogFile.close();
             delay(100); // for SD card..

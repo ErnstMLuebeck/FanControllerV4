@@ -8,6 +8,7 @@
 
 #include "Globals.h"
 #include <Timezone.h> 
+#include <TimeLib.h>
 
 // System Clock
 int SC_SysHour, SC_SysMin, SC_SysSec; 
@@ -31,10 +32,18 @@ void printTime(time_t t, char *tz, char *loc);
 void sPrintI00(int val);
 void sPrintDigits(int val);
 
+time_t getTeensy3Time()
+{
+  return Teensy3Clock.get();
+}
+
 void setSystemTime()
 {
+    setSyncProvider(getTeensy3Time); // use RTC
+
   setTime(compileTime());
   //setTime(15,55,0,15,8,2017);
+
 }
 
 void getSystemTime(int* h, int* mi, int* sec)

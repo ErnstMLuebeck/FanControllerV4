@@ -184,6 +184,7 @@ void KalmanFilter::getStates(float* x)
     int col1 = 1;
     MatrixCopy((float*)x_kn1, row1, col1, (float*)x);
 
+    Serial.println("KalmanFilter states:");
     MatrixPrint((float*) x_kn1, row1, col1);
 }
 

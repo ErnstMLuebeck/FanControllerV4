@@ -17,6 +17,7 @@ public:
     void calculate(float* u_k);
     void getStates(float* _x_k);
     void getOutputs(float* _y_k);
+    void getOutputsKn1(float* _y_kn1);
     
 private:
     void MatrixMultiply(float* A, float* B, int m, int p, int n, float* C);
@@ -41,6 +42,8 @@ private:
 
     float x_kn1[NX][1] = {{0}};  
     float y_k[NY][1] = {{0}}; 
+    float y_kn1[NY][1] = {{0}};
+    
 };
 
 

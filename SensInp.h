@@ -8,12 +8,11 @@
 //#include <DallasTemperature.h>
 #include "DHT.h"
 
-#define DHTPIN 18     // what digital pin we're connected to
+#define DHTPIN1 18
+#define DHTPIN2 19  
 
-// Uncomment whatever type you're using!
-//#define DHTTYPE DHT11   // DHT 11
 #define DHTTYPE DHT22   // DHT 22  (AM2302), AM2321
-//#define DHTTYPE DHT21   // DHT 21 (AM2301)
+
 
 // Connect pin 1 (on the left) of the sensor to +5V
 // NOTE: If using a board with 3.3V logic like an Arduino Due connect pin 1
@@ -33,7 +32,8 @@ uint8_t SI_StSun;
 //OneWire oneWire(TMP_PIN);  // temp sensor bus
 //DallasTemperature sensors(&oneWire);
 
-DHT dht(DHTPIN, DHTTYPE);
+DHT dht1(DHTPIN1, DHTTYPE);
+DHT dht2(DHTPIN2, DHTTYPE);
 
 void readSensors();
 void initSensors();
@@ -67,7 +67,8 @@ void initSensors()
     Serial.println();
      */
     
-    dht.begin();
+    dht1.begin();
+    dht2.begin();
 }
 
 void readSensors()
@@ -78,8 +79,8 @@ void readSensors()
     SI_TOut = sensors.getTempCByIndex(0);
     */
      
-    SI_TIn = dht.readTemperature();
-    SI_TOut = 10.3 + random(2);
+    SI_TIn = dht1.readTemperature();
+    SI_TOut = dht2.readTemperature();;
 
     //todo: error handling
     if(isnan(SI_TIn)) SI_TIn = 0;
@@ -92,8 +93,8 @@ void readSensors()
 
     //SI_TIn = 26.5 + random(3);
     //SI_TOut = 10.3 + random(5);
-    SI_HumIn = dht.readHumidity();
-    SI_HumOut = 26.6;
+    SI_HumIn = dht1.readHumidity();
+    SI_HumOut = dht2.readHumidity();;
     
     if(isnan(SI_HumIn)) SI_HumIn = 0;
     if(isnan(SI_HumOut)) SI_HumOut = 0;

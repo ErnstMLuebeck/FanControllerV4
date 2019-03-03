@@ -35,6 +35,8 @@ void StateSpaceModel::calculate(float* u_k)
 
     /* y_k = C*x_kn1; */
 
+    MatrixCopy((float*)y_k, NY, 1, (float*)y_kn1);
+
     row1 = NY;
     col1 = NX;
     row2 = NX;
@@ -42,12 +44,18 @@ void StateSpaceModel::calculate(float* u_k)
     MatrixMultiply((float*)C, (float*)x_kn1, row1, col1, col2, (float*)y_k); 
     //MatrixPrint((float*)y_k, row1, col2);
 
+    Serial.print("y_plant = ");
+    Serial.println(y_k[0][0]);
+
     row1 = NX;
     col1 = 1;
     row2 = NX;
     col2 = 1;
     MatrixAdd((float*)A_x_kn1, (float*)B_u_k, row1, col1, (float*)x_kn1);
     //MatrixPrint((float*) x_kn1, row1, col1);
+
+    Serial.println("x_plant = ");
+    MatrixPrint((float*) x_kn1, NX, 1);
 
 }
 
@@ -57,6 +65,7 @@ void StateSpaceModel::getStates(float* _x_k)
     int col1 = 1;
     MatrixCopy((float*)x_kn1, row1, col1, (float*)_x_k);
 
+    Serial.println("StateSpaceModel states:");
     MatrixPrint((float*) x_kn1, row1, col1);
 }
 
@@ -66,7 +75,15 @@ void StateSpaceModel::getOutputs(float* _y_k)
     int col1 = 1;
     MatrixCopy((float*)y_k, row1, col1, (float*)_y_k);
 
-    MatrixPrint((float*) y_k, row1, col1);
+    //MatrixPrint((float*) y_k, row1, col1);
+}
+
+void StateSpaceModel::getOutputsKn1(float* _y_kn1)
+{
+    int row1 = NY;
+    int col1 = 1;
+    MatrixCopy((float*)y_kn1, row1, col1, (float*)_y_kn1);
+
 }
 
 void StateSpaceModel::MatrixMultiply(float* A, float* B, int m, int p, int n, float* C)
@@ -91,8 +108,7 @@ void StateSpaceModel::MatrixPrint(float* A, int m, int n)
 {
 	// A = input matrix (m x n)
 	int i, j;
-	//printf("\n");
-    Serial.println();
+
 	for (i = 0; i < m; i++)
 	{
 		for (j = 0; j < n; j++)
@@ -104,6 +120,7 @@ void StateSpaceModel::MatrixPrint(float* A, int m, int n)
 		//printf("\n");
         Serial.println();
 	}
+    Serial.println();
 }
 
 void StateSpaceModel::MatrixAdd(float* A, float* B, int m, int n, float* C)

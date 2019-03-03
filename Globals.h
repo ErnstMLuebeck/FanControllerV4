@@ -85,6 +85,7 @@ SimpleMpc Mpc1 = SimpleMpc();
 KalmanFilter Kalman1 = KalmanFilter();
 
 StateSpaceModel PlantModel = StateSpaceModel();
+StateSpaceModel PlantModelMpc = StateSpaceModel();
 
 float Y_ref_g[NP] = {0,0,0,0,0,10,10,10,10,10};
 

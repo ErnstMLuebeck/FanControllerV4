@@ -97,7 +97,7 @@ void SimpleMpc::calculate(float _y_sensor)
     
     float u_opt = deltaU_opt[0];
     //printf("\n%f\n",u_opt);
-    Serial.println();
+    Serial.print("u_opt = ");
     Serial.println(u_opt,4);
     
     //Y_opt = F*x_hat_kn1 + Phi*deltaU_opt;
@@ -121,6 +121,9 @@ void SimpleMpc::calculate(float _y_sensor)
     col2 = 1;
     MatrixCopy((float*)Y_opt, row1, col1, (float*)Y_opt_kn1);
     MatrixAdd((float*)Temp10, (float*)Temp9, row1, col1, (float*)Y_opt); // Temp10 + Temp9
+
+    Serial.print("y_opt = ");
+    Serial.println(Y_opt[0]);
     
   
     /* Observer update:
@@ -143,7 +146,6 @@ void SimpleMpc::calculate(float _y_sensor)
     MatrixScale((float*)L, row1, col1, y_sensor, (float*)Temp4); // L*y_sensor
     //MatrixPrint((float*)Temp4, row1, col1);
     
-
     row1 = NX;
     col1 = 1;
     row2 = NY;
@@ -181,6 +183,8 @@ void SimpleMpc::calculate(float _y_sensor)
     row2 = NX;
     col2 = 1;
     MatrixAdd((float*)Temp8, (float*)Temp3, row1, col1, (float*)x_hat); // x_hat = Temp8 + Temp3
+
+    Serial.println("x_hat = ");
     MatrixPrint((float*) x_hat, row1, col1);
     
     MatrixCopy((float*)x_hat, row1, col1, (float*)x_hat_kn1); // x_hat_kn1 = x_hat
@@ -210,8 +214,7 @@ void SimpleMpc::MatrixPrint(float* A, int m, int n)
 {
 	// A = input matrix (m x n)
 	int i, j;
-	//printf("\n");
-    Serial.println();
+	
 	for (i = 0; i < m; i++)
 	{
 		for (j = 0; j < n; j++)
@@ -223,6 +226,7 @@ void SimpleMpc::MatrixPrint(float* A, int m, int n)
 		//printf("\n");
         Serial.println();
 	}
+    Serial.println();
 }
 
 void SimpleMpc::MatrixAdd(float* A, float* B, int m, int n, float* C)
@@ -459,12 +463,9 @@ void SimpleMpc::setYrefReceeding(float _y_ref)
 
 void SimpleMpc::setYref(float* _Y_ref)
 {
-    Serial.println("setYref:");
     for(int i=0; i<NP; i++)
-    {   Y_ref[i] = _Y_ref[i];
-        Serial.print(_Y_ref[i]);
-        Serial.print(" ");
-        Serial.println();
+    {   
+        Y_ref[i] = _Y_ref[i];
     }
 }
 
@@ -490,6 +491,19 @@ void SimpleMpc::getUoptKn1(float* _U_opt_kn1)
 {
     for (int ii = 0; ii < NP; ii++)
         _U_opt_kn1[ii] = deltaU_opt_kn1[ii];
+}
+
+void SimpleMpc::getXhat(float* _x_hat)
+{   /*
+    for (int ii = 0; ii < NX; ii++)
+        _x_hat[ii] = x_hat[ii];
+    */
+
+    int row1 = NX;
+    int col1 = 1;
+    MatrixCopy((float*)x_hat, row1, col1, (float*)_x_hat);
+
+    MatrixPrint((float*)_x_hat, row1, col1);
 }
 
 
