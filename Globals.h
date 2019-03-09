@@ -52,11 +52,11 @@ int StPwdLock = 0;
 unsigned long TiPwdLockStart = 0;
 
 // geographic position
-//float Sys_Lati = 47.0651; // Graz
-//float Sys_Longi = 15.4631;
+float Sys_Lati = 47.0651; // Graz
+float Sys_Longi = 15.4631;
 
-float Sys_Lati = 48.232465; // Ranshofen
-float Sys_Longi = 13.013861;
+//float Sys_Lati = 48.232465; // Ranshofen
+//float Sys_Longi = 13.013861;
 
 // window geometry
 float win_height = 1.73;  // [m]
@@ -79,6 +79,8 @@ float CAN_TqEngRef = 200;
 
 MovgAvgFilter TInMAFilter = MovgAvgFilter();
 MovgAvgFilter HumInMAFilter = MovgAvgFilter();
+MovgAvgFilter TOutMAFilter = MovgAvgFilter();
+MovgAvgFilter HumOutMAFilter = MovgAvgFilter();
 
 SimpleMpc Mpc1 = SimpleMpc();
 

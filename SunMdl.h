@@ -6,8 +6,8 @@
 
 // Sun Model
 // livingroom window obstacles (neighbour building, orientation)
-int SM_AziProfile[SZ_SUNPROFILE] = {0, 90, 91, 187, 188, 255, 256, 265, 269, 270, 279, 329, 330, 360};
-int SM_EleProfile[SZ_SUNPROFILE] = {90, 90, 7, 7, 7, 7, 7, 7, 7, 90, 90, 90, 90, 90};
+int SM_AziProfile[SZ_SUNPROFILE] = {0, 150, 151, 187, 188, 255, 256, 265, 266, 278, 279, 329, 330, 360};
+int SM_EleProfile[SZ_SUNPROFILE] = {90, 90, 5, 5, 22, 30, 5, 5, 7, 7, 5, 5, 90, 90};
 bool SM_SunStatus[SZ_SUNSTATUS];
 int SM_TimeVect[SZ_SUNSTATUS];
 

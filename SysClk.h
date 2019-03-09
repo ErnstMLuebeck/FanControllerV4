@@ -13,7 +13,7 @@
 // System Clock
 int SC_SysHour, SC_SysMin, SC_SysSec; 
 int SC_SysDay, SC_SysMon, SC_SysYear;
-int SC_Dst = 1; 
+int SC_Dst = 0; 
 
 //Central European Time (Frankfurt, Paris)
 TimeChangeRule CEST = {"CEST", Last, Sun, Mar, 2, 120};     //Central European Summer Time
@@ -63,7 +63,7 @@ void getSystemDate(int* d, int* mon, int* y)
 void getDst(int* dst)
 {
     //todo: automatically determine DST
-    *dst = 1;
+    *dst = 0;
 }
 
 //Function to return the compile date and time as a time_t value

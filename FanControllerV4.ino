@@ -522,9 +522,9 @@ void OS_60s()
             LogFile.print("; ");
             LogFile.print(SI_TDewIn,3);
             LogFile.print("; ");
-            LogFile.print(SI_TOut,3);
+            LogFile.print(SI_TOutFilt,3);
             LogFile.print("; ");
-            LogFile.print(SI_HumOut,3);
+            LogFile.print(SI_HumOutFilt,3);
             LogFile.print("; ");
             LogFile.print(SI_TDewOut,3);
             LogFile.print("; ");

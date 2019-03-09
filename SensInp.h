@@ -8,8 +8,8 @@
 //#include <DallasTemperature.h>
 #include "DHT.h"
 
-#define DHTPIN1 18
-#define DHTPIN2 19  
+#define DHTPIN1 19
+#define DHTPIN2 18  
 
 #define DHTTYPE DHT22   // DHT 22  (AM2302), AM2321
 
@@ -22,9 +22,9 @@
 // Connect a 10K resistor from pin 2 (data) to pin 1 (power) of the sensor
 
 float SI_TIn, SI_TOut;
-float SI_TInFilt;
+float SI_TInFilt, SI_TOutFilt;
 float SI_HumIn, SI_HumOut;
-float SI_HumInFilt;
+float SI_HumInFilt, SI_HumOutFilt;
 float SI_TDewIn, SI_TDewOut;
 float SI_LvlSun;
 uint8_t SI_StSun;
@@ -80,31 +80,31 @@ void readSensors()
     */
      
     SI_TIn = dht1.readTemperature();
-    SI_TOut = dht2.readTemperature();;
+    SI_TOut = dht2.readTemperature();
+    SI_HumIn = dht1.readHumidity();
+    SI_HumOut = dht2.readHumidity();;
 
     //todo: error handling
     if(isnan(SI_TIn)) SI_TIn = 0;
     if(isnan(SI_TOut)) SI_TOut = 0;
+    if(isnan(SI_HumIn)) SI_HumIn = 0;
+    if(isnan(SI_HumOut)) SI_HumOut = 0;
 
     SI_TIn = saturate(SI_TIn, -40, 50);
     SI_TOut = saturate(SI_TOut, -40, 50);
+    SI_HumIn = saturate(SI_HumIn, 0, 100);
+    SI_HumOut = saturate(SI_HumOut, 0, 100);
     
     SI_TInFilt = TInMAFilter.calculate(SI_TIn);
-
-    //SI_TIn = 26.5 + random(3);
-    //SI_TOut = 10.3 + random(5);
-    SI_HumIn = dht1.readHumidity();
-    SI_HumOut = dht2.readHumidity();;
-    
-    if(isnan(SI_HumIn)) SI_HumIn = 0;
-    if(isnan(SI_HumOut)) SI_HumOut = 0;
-    
-    SI_HumIn = saturate(SI_HumIn, 0, 100);
-    
+    SI_TOutFilt = TOutMAFilter.calculate(SI_TOut);
     SI_HumInFilt = HumInMAFilter.calculate(SI_HumIn);
+    SI_HumOutFilt = HumOutMAFilter.calculate(SI_HumOut);
 
-    SI_TDewIn = dewPoint(SI_TIn, SI_HumIn);
-    SI_TDewOut = dewPoint(SI_TOut, SI_HumOut);
+    SI_TDewIn = dewPoint(SI_TInFilt, SI_HumInFilt);
+    SI_TDewOut = dewPoint(SI_TOutFilt, SI_HumOutFilt);
+
+    if(isnan(SI_TDewIn)) SI_TDewIn = 0;
+    if(isnan(SI_TDewOut)) SI_TDewOut = 0;
 
     //TDiff = abs(SI_TOut-SI_TIn);
 
