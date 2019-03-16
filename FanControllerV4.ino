@@ -73,6 +73,14 @@ void setup()
     tft.begin();
     tft.setRotation(1);
     tft.fillScreen(BGCOLOR);
+
+    pinMode(BACKLIGHT_PIN, OUTPUT);
+    
+    for(int i=256; i>=0; i--)
+    {   analogWrite(BACKLIGHT_PIN, i);
+        delay(2);
+    }
+    
     
     initTouch();
   
@@ -130,16 +138,19 @@ void loop()
       //else Serial.println("No TRQ_PERC Data.");
 */
 
-    /* display timeout 60s */
-    if((millis()-TiLastTouch) >= 60000 && TchTimeout == 0)
-    {   //TchTimeout = 1;
-        //Serial.println("Display backligh off.");
-        //tft.sleep(1);
-        //UI = UI_KEYPAD;
-        //buildUI(UI);
+    /* display timeout 120s */
+    if((millis()-TiLastTouch) >= 120000 && TchTimeout == 0)
+    {   
+        for(int i=0; i<=256; i++)
+        {   analogWrite(BACKLIGHT_PIN, i);
+            delay(2);
+        }
+        
+        TchTimeout = 1;
+        tft.sleep(1);
 
         /* Todo:
-         * disable touch controller
+         * turn off backlight
          */
     }
 
@@ -147,7 +158,12 @@ void loop()
     if(TC_IsTouched && TchTimeout == 1)
     {   TchTimeout = 0;
         tft.sleep(0);
-        Serial.println("Display backlight on.");
+
+    for(int i=256; i>=0; i--)
+    {   analogWrite(BACKLIGHT_PIN, i);
+        delay(2);
+    }
+
         TC_WasTouched = false;     
     }
 

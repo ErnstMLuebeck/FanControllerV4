@@ -41,8 +41,12 @@ void setSystemTime()
 {
     setSyncProvider(getTeensy3Time); // use RTC
 
-  setTime(compileTime());
-  //setTime(15,55,0,15,8,2017);
+    /* To set the time uncomment the following line,
+    then comment it out and flash again. Time shall be kept
+    if a 3V coincell battery is connected */
+    
+    //setTime(compileTime());
+  
 
 }
 

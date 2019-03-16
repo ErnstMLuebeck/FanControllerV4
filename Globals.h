@@ -27,6 +27,8 @@ List SettingsList = List();
 #define BGCOLOR ILI9341_WHITE
 #define FGCOLOR ILI9341_BLACK
 
+#define BACKLIGHT_PIN 6
+
 #define SZ_SUNPROFILE (int)14
 #define RES_SUNSTATUS (int)15                     // [min] use divisor of 60
 #define SZ_SUNSTATUS (int)24*(60/RES_SUNSTATUS)   // every pixel
