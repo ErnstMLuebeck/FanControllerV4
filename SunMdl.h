@@ -8,7 +8,8 @@
 // livingroom window obstacles (neighbour building, orientation)
 int SM_AziProfile[SZ_SUNPROFILE] = {0, 150, 151, 187, 188, 255, 256, 265, 266, 278, 279, 329, 330, 360};
 int SM_EleProfile[SZ_SUNPROFILE] = {90, 90, 5, 5, 22, 30, 5, 5, 7, 7, 5, 5, 90, 90};
-bool SM_SunStatus[SZ_SUNSTATUS];
+bool SM_SunStatusVect[SZ_SUNSTATUS];
+bool SM_StSunMdl = 1;
 int SM_TimeVect[SZ_SUNSTATUS];
 
 int SM_RiseHour, SM_RiseMin, SM_SetHour, SM_SetMin;
@@ -182,7 +183,7 @@ bool getSunStatusFromVect(int minutes)
             break;
         }
     }
-    return(SM_SunStatus[idx]);  
+    return(SM_SunStatusVect[idx]);  
 }
 
 float calcSunArPwrDens(float azimuth, float elevation)

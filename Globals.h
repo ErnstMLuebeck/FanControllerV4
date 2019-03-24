@@ -15,6 +15,8 @@ List SettingsList = List();
 
 #define LDR_PIN A8
 
+#define PIN_BZZR 5
+
 #define TCH_CS  8
 // MOSI=11, MISO=12, SCK=13
 
@@ -69,7 +71,11 @@ float roof_len = 1.22;    // [m]
 //float roof_angle = atan(roof_len/win_height)*180/PI;  // [deg] 
 float roof_angle = 90;
 
-unsigned long ms_counter = 0;
+volatile unsigned long ms_counter = 0;
+
+volatile bool Flg2sTaskPending=0;
+volatile bool Flg10sTaskPending=0;
+volatile bool Flg60sTaskPending=0;
 
 ILI9341_t3 tft = ILI9341_t3(TFT_CS, TFT_DC);
 
@@ -92,6 +98,9 @@ StateSpaceModel PlantModel = StateSpaceModel();
 StateSpaceModel PlantModelMpc = StateSpaceModel();
 
 float Y_ref_g[NP] = {0,0,0,0,0,10,10,10,10,10};
+
+SignalMonitor StSunMdlMon = SignalMonitor(1);
+SignalMonitor SysTiSecMon = SignalMonitor(0);
 
 
 

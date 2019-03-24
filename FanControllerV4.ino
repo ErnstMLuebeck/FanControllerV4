@@ -43,7 +43,7 @@
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include <TimeLib.h>
-#include "TimerOne.h"  
+#include "TimerOne.h" 
 #include <SD.h>
 #include "List.h"
 #include "MovgAvgFilter.h"
@@ -51,6 +51,7 @@
 #include "SimpleMPC.h"
 #include "KalmanFilter.h"
 #include "StateSpaceModel.h"
+#include "SignalMonitor.h"
 
 #include "ecu_reader.h"
 #include <FlexCAN.h>
@@ -81,7 +82,6 @@ void setup()
         delay(2);
     }
     
-    
     initTouch();
   
     //initEvents();
@@ -103,16 +103,58 @@ void setup()
     //handleSdCard();
     initSdCard();
     
-    loadSdCardTrainingData();
+    //loadSdCardTrainingData();
+
+    /* play startup sound */
+    tone(PIN_BZZR, 440*2);
+    delay(130);
+    tone(PIN_BZZR, 550*2);
+    delay(130);
+    tone(PIN_BZZR, 660*2); 
+    delay(130);
+    noTone(PIN_BZZR);
+
+    OS_Init();
   
     // start OS
     // timer for OS task exectution
     Timer1.initialize(10000);   // 10ms
     Timer1.attachInterrupt(OS_TaskTimer);
+
 }
 
 void loop() 
 { 
+    if(Flg2sTaskPending)
+    {   OS_2s();
+        Flg2sTaskPending = 0;
+        //tone(PIN_BZZR,440*2,50);
+    }
+
+    if(Flg10sTaskPending)
+    {   noInterrupts();
+        OS_10s();
+        interrupts();
+        Flg10sTaskPending = 0;
+        //tone(PIN_BZZR,660*2,50);
+    }
+
+    if(Flg60sTaskPending)
+    {   OS_60s();
+        Flg60sTaskPending = 0;
+        //tone(PIN_BZZR,550*2,50);
+    }
+
+    /*
+    if(ms_counter%50 == 0)
+    {   tone(PIN_BZZR,440*2);
+        delay(100);
+        tone(PIN_BZZR,660*2);
+        delay(100);
+        noTone(PIN_BZZR);
+    }
+*/
+
     int engine_data;
 /*
     if(ecu_reader.request(ENGINE_RPM,&engine_data))
@@ -149,9 +191,6 @@ void loop()
         TchTimeout = 1;
         tft.sleep(1);
 
-        /* Todo:
-         * turn off backlight
-         */
     }
 
     /* react on touch if display was off */
@@ -159,11 +198,10 @@ void loop()
     {   TchTimeout = 0;
         tft.sleep(0);
 
-    for(int i=256; i>=0; i--)
-    {   analogWrite(BACKLIGHT_PIN, i);
-        delay(2);
-    }
-
+        for(int i=256; i>=0; i--)
+        {   analogWrite(BACKLIGHT_PIN, i);
+            delay(2);
+        }
         TC_WasTouched = false;     
     }
 
@@ -279,9 +317,6 @@ void loop()
           {   UI = UI_MENU;
               buildUI(UI);   
           }
-          else if(TC_IsTouchedId == 1)
-          {   readSensors();
-          }
         
       }
       else if(UI == UI_PLOT)
@@ -372,31 +407,24 @@ void loop()
 }
 
 void OS_TaskTimer()
-{   
-    noInterrupts();
+{   /* 10ms intervals */
 
-    if(ms_counter == 0)
-    {   OS_Init();
-    }
+    noInterrupts();
     
     ms_counter++;
-
-    OS_10ms();
+    TouchController();
     
-    if(ms_counter%10 == 0)
-    {   //Serial.println("100ms");
-    }
-    if(ms_counter%50 == 0)
-    {   //Serial.println("500ms");
-    }
-    if(ms_counter%100 == 0)
-    {   OS_1s();
+    if(ms_counter%200 == 0)
+    {   //OS_2s();
+        Flg2sTaskPending = 1;
     }
     if(ms_counter%1000 == 0)
-    {   OS_10s();
+    {   //OS_10s();
+        Flg10sTaskPending = 1;
     }
     if(ms_counter%6000 == 0)
-    {   OS_60s();
+    {   //OS_60s();
+        Flg60sTaskPending = 1;
     }
     
     interrupts();
@@ -427,7 +455,7 @@ void OS_Init()
     calcSunAngle(Sys_Lati, Sys_Longi, SC_SysMon, SC_SysDay, SC_SysHour, SC_SysMin, &SM_Azimuth, &SM_Elevation);
     calcSunriseTime(Sys_Lati, Sys_Longi, SC_SysMon, SC_SysDay, SM_RiseHour, SM_RiseMin);
     calcSunsetTime(Sys_Lati, Sys_Longi, SC_SysMon, SC_SysDay, SM_SetHour, SM_SetMin);
-    calcSunstatusVect(Sys_Lati, Sys_Longi, SC_SysMon, SC_SysDay, SM_SunStatus, SM_TimeVect);
+    calcSunstatusVect(Sys_Lati, Sys_Longi, SC_SysMon, SC_SysDay, SM_SunStatusVect, SM_TimeVect);
     //SM_ArPwrDens = calcSunArPwrDens(SM_Azimuth, SM_Elevation);
 
     tft.setTextColor(BGCOLOR);
@@ -435,7 +463,7 @@ void OS_Init()
     tft.setCursor(1, 229);
     tft.print("Calc. Sunprofile..");
 
-    delay(200);
+    //delay(200);
 
     loadSdCardSettings();
     SettingsList.printListConsole();
@@ -466,27 +494,52 @@ void OS_Init()
     FC_TOutMin = item_value;
 
     buildUI(UI);
+
 }
 
-void OS_10ms()
-{   TouchController();
-}
-
-void OS_1s()
-{   getSystemTime(&SC_SysHour, &SC_SysMin, &SC_SysSec);
+void OS_2s()
+{   
+    getSystemTime(&SC_SysHour, &SC_SysMin, &SC_SysSec);
     getSystemDate(&SC_SysDay, &SC_SysMon, &SC_SysYear);
     getDst(&SC_Dst);
 
     //EventTimer();
     readSensors();
+    SM_StSunMdl = getSunStatusFromVect(SC_SysHour*60+SC_SysMin);
     StmacFanCtlr();
 
     refreshUI(UI);
+
+    bool temp = StSunMdlMon.detectChange(SM_StSunMdl);
+
+    if(temp && SM_StSunMdl == 1)
+    {   /* sun came up */
+        tone(PIN_BZZR, 440*2);
+        delay(130);
+        tone(PIN_BZZR, 550*2);
+        delay(130);
+        tone(PIN_BZZR, 660*2); 
+        delay(260);
+        noTone(PIN_BZZR);
+    }
+    else if(temp && SM_StSunMdl == 0)
+    {   /* sun disapeard */
+        tone(PIN_BZZR, 660*2);
+        delay(130);
+        tone(PIN_BZZR, 550*2);
+        delay(130);
+        tone(PIN_BZZR, 440*2); 
+        delay(260);
+        noTone(PIN_BZZR);
+    }
+
 }
 
 void OS_10s()
 {  
     calcSunAngle(Sys_Lati, Sys_Longi, SC_SysMon, SC_SysDay, SC_SysHour, SC_SysMin, &SM_Azimuth, &SM_Elevation);   
+    
+    /* should not be interrupted apperantly.. (crash..) */
     refreshStatusBar();
     
     //SM_ArPwrDens = calcSunArPwrDens(SM_Azimuth, SM_Elevation);
@@ -547,6 +600,8 @@ void OS_60s()
             LogFile.print(FC_StFan);
             LogFile.print("; ");
             LogFile.print((float)FC_TiFanOnTot/3600,2);
+            LogFile.print("; ");
+            LogFile.print(SM_StSunMdl);
             LogFile.println("; ");
             
             LogFile.close();
@@ -554,20 +609,22 @@ void OS_60s()
             Serial.println("Data written to SD Card.");
         }
         else
+        {
             Serial.println("Data storing failed!.");
+        }
         
     } 
 }
 
 
 void refreshStatusBar()
-{
+{       
     tft.fillRect(20, 0, tft.width()-40, 19, BGCOLOR);
     tft.drawFastHLine(20,18,tft.width()-40, FGCOLOR);
     tft.setTextColor(FGCOLOR);
+
     tft.setFont(Arial_14);
     tft.setCursor(80, 2);
-  
     char hour_str[2], minute_str[2], time_str[5];
     char day_str[2], month_str[2], year_str[4], date_str[10];
     char title_str[25];
@@ -590,6 +647,26 @@ void refreshStatusBar()
     sprintf(title_str, "%s - %s",time_str, date_str);
     
     tft.print(title_str);
+
+    tft.setFont(Arial_8);
+
+    if(SD_flgSdCard)
+    {   tft.setTextColor(FGCOLOR);
+        tft.drawRect(20, 6, 8, 10, ILI9341_BLACK);
+        tft.drawPixel(27, 6, BGCOLOR);
+        tft.drawPixel(26, 7, ILI9341_BLACK);
+        tft.setCursor(31, 8);
+        tft.print("SD");
+    }
+    else
+    {   
+        tft.setTextColor(BGCOLOR);
+        tft.drawRect(20, 6, 8, 10, BGCOLOR);
+        tft.drawPixel(27, 6, BGCOLOR);
+        tft.drawPixel(26, 7, BGCOLOR);
+        tft.setCursor(31, 8);
+        tft.print("SD");
+    }
 }
 
 void printBootLogo()
@@ -1077,9 +1154,6 @@ void buildUI(int ui_id)
     {
         char label3[10] = "H";
         addButton(0, 260, 25, 40, 40, label3);
-
-        char label4[10] = "R";
-        addButton(1, 260, 75, 40, 40, label4);
     }
 
     if(ui_id == UI_PLOT)
@@ -1554,7 +1628,7 @@ void initSdCard()
 
         // if the file opened okay, write to it:
         if (LogFile) 
-        {   LogFile.println("Zeit; TIn; HumIn; TDewIn; TOut; HumOut; TDewOut; StFan; TiFanOnTot;");
+        {   LogFile.println("Zeit; TIn; HumIn; TDewIn; TOut; HumOut; TDewOut; StFan; TiFanOnTot; StSunMdl;");
 
             LogFile.close();
             delay(100); // for SD card..
