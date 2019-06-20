@@ -6,7 +6,7 @@
 // Class Constructor
 MovgAvgFilter::MovgAvgFilter()
 {
-    Len = 60; /* hardcoded! */
+    Len = 30; /* hardcoded! */
     
     for(int i=0; i<Len; i++)
     {   buffer[i] = 0;

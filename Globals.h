@@ -73,6 +73,7 @@ float roof_angle = 90;
 
 volatile unsigned long ms_counter = 0;
 
+volatile bool Flg100msTaskPending=0;
 volatile bool Flg2sTaskPending=0;
 volatile bool Flg10sTaskPending=0;
 volatile bool Flg60sTaskPending=0;
@@ -101,6 +102,9 @@ float Y_ref_g[NP] = {0,0,0,0,0,10,10,10,10,10};
 
 SignalMonitor StSunMdlMon = SignalMonitor(1);
 SignalMonitor SysTiSecMon = SignalMonitor(0);
+SignalMonitor StTOutHotter = SignalMonitor(0);
+
+SignalHysteresis SigHysTOut = SignalHysteresis(1);
 
 
 

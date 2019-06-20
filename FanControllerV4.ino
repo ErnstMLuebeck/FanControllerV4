@@ -52,6 +52,7 @@
 #include "KalmanFilter.h"
 #include "StateSpaceModel.h"
 #include "SignalMonitor.h"
+#include "SignalHysteresis.h"
 
 #include "ecu_reader.h"
 #include <FlexCAN.h>
@@ -88,7 +89,7 @@ void setup()
   
     initSensors();
 
-    //ecu_reader.init(500000);
+    ecu_reader.init(500000);
     
     setSystemTime();
     getSystemTime(&SC_SysHour, &SC_SysMin, &SC_SysSec);
@@ -125,10 +126,15 @@ void setup()
 
 void loop() 
 { 
+
+    if(Flg100msTaskPending)
+    {   OS_100ms();
+        Flg100msTaskPending = 0;
+    }
+
     if(Flg2sTaskPending)
     {   OS_2s();
         Flg2sTaskPending = 0;
-        //tone(PIN_BZZR,440*2,50);
     }
 
     if(Flg10sTaskPending)
@@ -136,49 +142,12 @@ void loop()
         OS_10s();
         interrupts();
         Flg10sTaskPending = 0;
-        //tone(PIN_BZZR,660*2,50);
     }
 
     if(Flg60sTaskPending)
     {   OS_60s();
         Flg60sTaskPending = 0;
-        //tone(PIN_BZZR,550*2,50);
     }
-
-    /*
-    if(ms_counter%50 == 0)
-    {   tone(PIN_BZZR,440*2);
-        delay(100);
-        tone(PIN_BZZR,660*2);
-        delay(100);
-        noTone(PIN_BZZR);
-    }
-*/
-
-    int engine_data;
-/*
-    if(ecu_reader.request(ENGINE_RPM,&engine_data))
-    {    //Serial.print("RPM = ");
-         //Serial.println(engine_data);
-         CAN_SpdEng = engine_data;
-    } 
-    //else Serial.println("No RPM Data.");
-
-      if(ecu_reader.request(ENGINE_TRQ_REF,&engine_data))
-      {    //Serial.print("TRQ_REF = ");
-           //Serial.println(engine_data);
-           CAN_TqEngRef = engine_data;
-      } 
-      //else Serial.println("No TRQ_REF Data.");
-    
-    if(ecu_reader.request(ENGINE_TRQ_PERC,&engine_data))
-      {   //Serial.print("TRQ_PERC = ");
-          //Serial.println(engine_data);
-          CAN_TqEng = CAN_TqEngRef * (float)engine_data/100.0;
-          
-      } 
-      //else Serial.println("No TRQ_PERC Data.");
-*/
 
     /* display timeout 120s */
     if((millis()-TiLastTouch) >= 120000 && TchTimeout == 0)
@@ -190,7 +159,6 @@ void loop()
         
         TchTimeout = 1;
         tft.sleep(1);
-
     }
 
     /* react on touch if display was off */
@@ -276,7 +244,8 @@ void loop()
           }
       }
       else if(UI == UI_MENU)
-      {
+      {   Serial.println(TC_IsTouchedId);
+      
           if(TC_IsTouchedId == 0)
           {   UI = UI_INFO;
               buildUI(UI);
@@ -413,7 +382,10 @@ void OS_TaskTimer()
     
     ms_counter++;
     TouchController();
-    
+
+    // 10ms
+    Flg100msTaskPending = 1;
+
     if(ms_counter%200 == 0)
     {   //OS_2s();
         Flg2sTaskPending = 1;
@@ -428,6 +400,7 @@ void OS_TaskTimer()
     }
     
     interrupts();
+
 }
 
 void OS_Init()
@@ -497,6 +470,61 @@ void OS_Init()
 
 }
 
+void OS_100ms()
+{ 
+    static uint8_t lifeCounter = 0;
+
+    uint8_t crc = 66;
+
+    CAN_message_t can_MsgTx;
+
+    can_MsgTx.id = 0x202;
+  
+    can_MsgTx.buf[0] = crc;
+    can_MsgTx.buf[1] = lifeCounter;
+    can_MsgTx.buf[2] = 0;  
+    can_MsgTx.buf[3] = 0;
+    can_MsgTx.buf[4] = 0;  
+    can_MsgTx.buf[5] = 0;
+    can_MsgTx.buf[6] = 0;  
+    can_MsgTx.buf[7] = 0;
+    can_MsgTx.len = 8; 
+    can_MsgTx.ext = 0; 
+    //  can_MsgTx.flags.extended = 0; 
+    //  can_MsgTx.flags.remote = 0;
+    
+    //  can_MsgTx.timeout = 500;
+
+    Can0.write(can_MsgTx);  
+
+    lifeCounter++;
+
+/*
+    if(ecu_reader.request(ENGINE_RPM, &engine_data))
+    {    //Serial.print("RPM = ");
+         //Serial.println(engine_data);
+         CAN_SpdEng = engine_data;
+    } 
+    //else Serial.println("No RPM Data.");
+
+
+    if(ecu_reader.request(ENGINE_TRQ_REF,&engine_data))
+    {    //Serial.print("TRQ_REF = ");
+         //Serial.println(engine_data);
+         CAN_TqEngRef = engine_data;
+    } 
+    //else Serial.println("No TRQ_REF Data.");
+    
+    if(ecu_reader.request(ENGINE_TRQ_PERC,&engine_data))
+      {   //Serial.print("TRQ_PERC = ");
+          //Serial.println(engine_data);
+          CAN_TqEng = CAN_TqEngRef * (float)engine_data/100.0;
+          
+      } 
+      //else Serial.println("No TRQ_PERC Data.");
+*/
+}
+
 void OS_2s()
 {   
     getSystemTime(&SC_SysHour, &SC_SysMin, &SC_SysSec);
@@ -510,7 +538,7 @@ void OS_2s()
 
     refreshUI(UI);
 
-    bool temp = StSunMdlMon.detectChange(SM_StSunMdl);
+    int temp = StSunMdlMon.detectChange(SM_StSunMdl);
 
     if(temp && SM_StSunMdl == 1)
     {   /* sun came up */
@@ -522,13 +550,35 @@ void OS_2s()
         delay(260);
         noTone(PIN_BZZR);
     }
-    else if(temp && SM_StSunMdl == 0)
+    else if(temp && SM_StSunMdl == -1)
     {   /* sun disapeard */
         tone(PIN_BZZR, 660*2);
         delay(130);
         tone(PIN_BZZR, 550*2);
         delay(130);
         tone(PIN_BZZR, 440*2); 
+        delay(260);
+        noTone(PIN_BZZR);
+    }
+  
+    /* Summer mode: keep appartment cool */
+    SI_FlgTOutHotter = SigHysTOut.update(SI_TOut, SI_TIn - 2.0, SI_TIn + 2.0);
+
+    int StTemp = StTOutHotter.detectChange(SI_FlgTOutHotter);
+
+    if(StTemp == 1)
+    {   /* TOut surpassed TIn */
+        tone(PIN_BZZR, 440*2);
+        delay(130);
+        tone(PIN_BZZR, 660*2);
+        delay(260);
+        noTone(PIN_BZZR);
+    }
+    if(StTemp == -1)
+    {   /* TOut is lower than TIn */
+        tone(PIN_BZZR, 660*2);
+        delay(130);
+        tone(PIN_BZZR, 440*2);
         delay(260);
         noTone(PIN_BZZR);
     }

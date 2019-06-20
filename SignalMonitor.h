@@ -10,13 +10,13 @@
 class SignalMonitor 
 {
     public:
-        SignalMonitor(int _x_kn1);
-        boolean detectIncrease(int _x_k);
-        boolean detectDecrease(int _x_k);
-        boolean detectChange(int _x_k);
+        SignalMonitor(float _x_kn1);
+        boolean detectIncrease(float _x_k);
+        boolean detectDecrease(float _x_k);
+        int detectChange(float _x_k);
         
     private:
-        int x_kn1;
+        float x_kn1;
 };
 
 #endif

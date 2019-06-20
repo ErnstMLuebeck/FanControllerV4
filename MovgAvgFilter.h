@@ -13,7 +13,7 @@ class MovgAvgFilter
 
     private:
         uint8_t Len;
-        float buffer[60];
+        float buffer[30];
         float alpha;
         uint8_t pointer;
 

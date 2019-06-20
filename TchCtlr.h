@@ -5,10 +5,10 @@
 
 // This is calibration data for the raw touch data to the screen coordinates
 // Todo: calibrate scrren better
-#define TS_MINX 150
-#define TS_MINY 130
-#define TS_MAXX 3800
-#define TS_MAXY 4000
+#define TS_MINX 3896 //150
+#define TS_MINY 3763 //130
+#define TS_MAXX 400 //3800
+#define TS_MAXY 250 //4000
 
 #define TFT_WIDTH 320
 #define TFT_HEIGHT 240
@@ -400,6 +400,10 @@ void TouchController()
 
         tch_x = map(p.x, TS_MINX, TS_MAXX, 0, TFT_WIDTH);
         tch_y = map(p.y, TS_MINY, TS_MAXY, 0, TFT_HEIGHT);
+
+        Serial.print(tch_x);
+        Serial.print(" ");
+        Serial.println(tch_y);
 
         TC_IsTouchedId = findTouchObj(tch_x, tch_y);
         TC_IsTouchedType = getTouchObjType(TC_IsTouchedId);

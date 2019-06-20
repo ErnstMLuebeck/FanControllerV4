@@ -40,6 +40,7 @@ uint8_t ecu_reader_class::request(uint8_t pid,  int *engine_data)
 //  can_MsgTx.timeout = 500;
 
   Can0.write(can_MsgTx);  
+/*
 
   elapsedMillis waiting;     // "waiting" starts at zero
   
@@ -51,7 +52,7 @@ uint8_t ecu_reader_class::request(uint8_t pid,  int *engine_data)
         if((can_MsgRx.id == PID_REPLY) && (can_MsgRx.buf[2] == pid))
         { 
             switch(can_MsgRx.buf[2])
-            {   /* Details from http://en.wikipedia.org/wiki/OBD-II_PIDs */
+            {   // Details from http://en.wikipedia.org/wiki/OBD-II_PIDs
                 case ENGINE_RPM:              //   ((A*256)+B)/4    [RPM]
                     *engine_data =  ((can_MsgRx.buf[3]*256) + can_MsgRx.buf[4])/4;
                     //sprintf(buffer,"%d  ",(int) engine_data);
@@ -100,7 +101,7 @@ uint8_t ecu_reader_class::request(uint8_t pid,  int *engine_data)
 
  
   } // while
-  
+  */
   return 0;
 
 }

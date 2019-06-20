@@ -29,6 +29,8 @@ float SI_TDewIn, SI_TDewOut;
 float SI_LvlSun;
 uint8_t SI_StSun;
 
+boolean SI_FlgTOutHotter = 0;
+
 //OneWire oneWire(TMP_PIN);  // temp sensor bus
 //DallasTemperature sensors(&oneWire);
 
