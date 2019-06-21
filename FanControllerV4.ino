@@ -52,7 +52,6 @@
 #include "KalmanFilter.h"
 #include "StateSpaceModel.h"
 #include "SignalMonitor.h"
-#include "SignalHysteresis.h"
 
 #include "ecu_reader.h"
 #include <FlexCAN.h>
@@ -472,57 +471,7 @@ void OS_Init()
 
 void OS_100ms()
 { 
-    static uint8_t lifeCounter = 0;
-
-    uint8_t crc = 66;
-
-    CAN_message_t can_MsgTx;
-
-    can_MsgTx.id = 0x202;
-  
-    can_MsgTx.buf[0] = crc;
-    can_MsgTx.buf[1] = lifeCounter;
-    can_MsgTx.buf[2] = 0;  
-    can_MsgTx.buf[3] = 0;
-    can_MsgTx.buf[4] = 0;  
-    can_MsgTx.buf[5] = 0;
-    can_MsgTx.buf[6] = 0;  
-    can_MsgTx.buf[7] = 0;
-    can_MsgTx.len = 8; 
-    can_MsgTx.ext = 0; 
-    //  can_MsgTx.flags.extended = 0; 
-    //  can_MsgTx.flags.remote = 0;
-    
-    //  can_MsgTx.timeout = 500;
-
-    Can0.write(can_MsgTx);  
-
-    lifeCounter++;
-
-/*
-    if(ecu_reader.request(ENGINE_RPM, &engine_data))
-    {    //Serial.print("RPM = ");
-         //Serial.println(engine_data);
-         CAN_SpdEng = engine_data;
-    } 
-    //else Serial.println("No RPM Data.");
-
-
-    if(ecu_reader.request(ENGINE_TRQ_REF,&engine_data))
-    {    //Serial.print("TRQ_REF = ");
-         //Serial.println(engine_data);
-         CAN_TqEngRef = engine_data;
-    } 
-    //else Serial.println("No TRQ_REF Data.");
-    
-    if(ecu_reader.request(ENGINE_TRQ_PERC,&engine_data))
-      {   //Serial.print("TRQ_PERC = ");
-          //Serial.println(engine_data);
-          CAN_TqEng = CAN_TqEngRef * (float)engine_data/100.0;
-          
-      } 
-      //else Serial.println("No TRQ_PERC Data.");
-*/
+   
 }
 
 void OS_2s()
@@ -562,9 +511,12 @@ void OS_2s()
     }
   
     /* Summer mode: keep appartment cool */
-    SI_FlgTOutHotter = SigHysTOut.update(SI_TOut, SI_TIn - 2.0, SI_TIn + 2.0);
+    SI_FlgTOutHotter = SigHysTOut.update(SI_TOut, SI_TIn - 1.5, SI_TIn + 1.5);
 
-    int StTemp = StTOutHotter.detectChange(SI_FlgTOutHotter);
+    /* TurnOffDelay to debounce sensor connection */
+    SI_FlgTOutHotterDly = TurnOffDlyTOutHotter.updateTurnOffDelay(SI_FlgTOutHotter, 120, 2);
+
+    int StTemp = StTOutHotter.detectChange(SI_FlgTOutHotterDly);
 
     if(StTemp == 1)
     {   /* TOut surpassed TIn */

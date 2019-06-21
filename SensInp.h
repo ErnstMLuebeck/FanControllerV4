@@ -30,6 +30,7 @@ float SI_LvlSun;
 uint8_t SI_StSun;
 
 boolean SI_FlgTOutHotter = 0;
+boolean SI_FlgTOutHotterDly = 0;
 
 //OneWire oneWire(TMP_PIN);  // temp sensor bus
 //DallasTemperature sensors(&oneWire);
@@ -75,38 +76,39 @@ void initSensors()
 
 void readSensors()
 {   
-    /*
-    sensors.requestTemperatures();
-    SI_TIn = sensors.getTempCByIndex(1);
-    SI_TOut = sensors.getTempCByIndex(0);
-    */
-     
     SI_TIn = dht1.readTemperature();
     SI_TOut = dht2.readTemperature();
     SI_HumIn = dht1.readHumidity();
     SI_HumOut = dht2.readHumidity();;
 
     //todo: error handling
-    if(isnan(SI_TIn)) SI_TIn = 0;
-    if(isnan(SI_TOut)) SI_TOut = 0;
-    if(isnan(SI_HumIn)) SI_HumIn = 0;
-    if(isnan(SI_HumOut)) SI_HumOut = 0;
-
-    SI_TIn = saturate(SI_TIn, -40, 50);
-    SI_TOut = saturate(SI_TOut, -40, 50);
-    SI_HumIn = saturate(SI_HumIn, 0, 100);
-    SI_HumOut = saturate(SI_HumOut, 0, 100);
+    if(isnan(SI_TIn) || isnan(SI_HumIn)) 
+    {   
+        SI_TIn = 0;
+        SI_HumIn = 0;
+    }
+    else
+    {
+        SI_TIn = saturate(SI_TIn, -40, 50);
+        SI_HumIn = saturate(SI_HumIn, 0, 100);
+        SI_TInFilt = TInMAFilter.calculate(SI_TIn);
+        SI_HumInFilt = HumInMAFilter.calculate(SI_HumIn);
+        SI_TDewIn = dewPoint(SI_TInFilt, SI_HumInFilt);
+    }
     
-    SI_TInFilt = TInMAFilter.calculate(SI_TIn);
-    SI_TOutFilt = TOutMAFilter.calculate(SI_TOut);
-    SI_HumInFilt = HumInMAFilter.calculate(SI_HumIn);
-    SI_HumOutFilt = HumOutMAFilter.calculate(SI_HumOut);
-
-    SI_TDewIn = dewPoint(SI_TInFilt, SI_HumInFilt);
-    SI_TDewOut = dewPoint(SI_TOutFilt, SI_HumOutFilt);
-
-    if(isnan(SI_TDewIn)) SI_TDewIn = 0;
-    if(isnan(SI_TDewOut)) SI_TDewOut = 0;
+    if(isnan(SI_TOut) || isnan(SI_HumOut))
+    {
+        SI_TOut = 0;
+        SI_HumOut = 0;
+    } 
+    else
+    {
+        SI_TOut = saturate(SI_TOut, -40, 50);
+        SI_HumOut = saturate(SI_HumOut, 0, 100);
+        SI_TOutFilt = TOutMAFilter.calculate(SI_TOut);
+        SI_HumOutFilt = HumOutMAFilter.calculate(SI_HumOut);
+        SI_TDewOut = dewPoint(SI_TOutFilt, SI_HumOutFilt);
+    } 
 
     //TDiff = abs(SI_TOut-SI_TIn);
 
@@ -123,9 +125,6 @@ void readSensors()
     // sun status hysteresis
     if((SI_LvlSun >= 80) && (SI_StSun == 0)) SI_StSun = 1;
     if((SI_LvlSun <= 70) && (SI_StSun == 1)) SI_StSun = 0;
-
-    //CAN_SpdEng = 1000 + random(100);
-    //CAN_TqEng = 80 + random(50);
 
 }
 

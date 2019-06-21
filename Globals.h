@@ -106,6 +106,8 @@ SignalMonitor StTOutHotter = SignalMonitor(0);
 
 SignalHysteresis SigHysTOut = SignalHysteresis(1);
 
+TurnOnOffDelay TurnOffDlyTOutHotter = TurnOnOffDelay(0);
+
 
 
 #endif /* GLOBALS_H */
