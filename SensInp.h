@@ -44,32 +44,6 @@ float dewPoint(float celsius, float humidity);
 
 void initSensors()
 {
-    /*
-    sensors.begin();
-    sensors.setResolution(12);
-  
-    uint8_t addr0[8], addr1[8];
-  
-    uint8_t numSensors = sensors.getDeviceCount();
-    sensors.getAddress(addr0, 0);
-    sensors.getAddress(addr1, 1);
-  
-    Serial.println(numSensors);
-    Serial.print("ADDR0 =");
-    for(int i = 0; i < 8; i++) {
-      Serial.write(' ');
-      Serial.print(addr0[i], HEX);
-    }
-    Serial.println();
-    
-    Serial.print("ADDR1 =");
-    for(int i = 0; i < 8; i++) {
-      Serial.write(' ');
-      Serial.print(addr1[i], HEX);
-    }
-    Serial.println();
-     */
-    
     dht1.begin();
     dht2.begin();
 }

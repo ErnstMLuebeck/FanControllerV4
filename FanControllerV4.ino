@@ -485,6 +485,16 @@ void OS_2s()
     SM_StSunMdl = getSunStatusFromVect(SC_SysHour*60+SC_SysMin);
     StmacFanCtlr();
 
+    if(FC_StFan == FANON)
+    {   
+        digitalWrite(FAN_PIN, HIGH);
+    }
+    else
+    {
+        digitalWrite(FAN_PIN, LOW);
+    }
+    
+
     refreshUI(UI);
 
     int temp = StSunMdlMon.detectChange(SM_StSunMdl);
@@ -511,26 +521,38 @@ void OS_2s()
     }
   
     /* Summer mode: keep appartment cool */
-    SI_FlgTOutHotter = SigHysTOut.update(SI_TOut, SI_TIn - 1.5, SI_TIn + 1.5);
+    float TInDmd = 20;
+    
+    SI_FlgTOutHotter = SigHysTOut.update(SI_TOutFilt, SI_TInFilt - 0.5, SI_TInFilt + 1.0);
+
+
+    Serial.print(SI_TInFilt);
+    Serial.print(" ");
+    Serial.println(SI_TOutFilt);
+
+    Serial.print(SI_FlgTOutHotter);
+    Serial.print(" ");
 
     /* TurnOffDelay to debounce sensor connection */
-    SI_FlgTOutHotterDly = TurnOffDlyTOutHotter.updateTurnOffDelay(SI_FlgTOutHotter, 120, 2);
+    //SI_FlgTOutHotterDly = TurnOffDlyTOutHotter.updateTurnOffDelay(SI_FlgTOutHotter, 4, 2);
 
-    int StTemp = StTOutHotter.detectChange(SI_FlgTOutHotterDly);
+    int StTemp = StTOutHotter.detectChange(SI_FlgTOutHotter);
+
+    Serial.println(StTemp);
 
     if(StTemp == 1)
     {   /* TOut surpassed TIn */
-        tone(PIN_BZZR, 440*2);
-        delay(130);
         tone(PIN_BZZR, 660*2);
+        delay(130);
+        tone(PIN_BZZR, 440*2);
         delay(260);
         noTone(PIN_BZZR);
     }
     if(StTemp == -1)
     {   /* TOut is lower than TIn */
-        tone(PIN_BZZR, 660*2);
-        delay(130);
         tone(PIN_BZZR, 440*2);
+        delay(130);
+        tone(PIN_BZZR, 660*2);
         delay(260);
         noTone(PIN_BZZR);
     }

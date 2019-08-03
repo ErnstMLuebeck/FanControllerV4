@@ -26,6 +26,8 @@ List SettingsList = List();
 
 #define TMP_PIN 18
 
+#define FAN_PIN 1
+
 #define BGCOLOR ILI9341_WHITE
 #define FGCOLOR ILI9341_BLACK
 
@@ -104,7 +106,7 @@ SignalMonitor StSunMdlMon = SignalMonitor(1);
 SignalMonitor SysTiSecMon = SignalMonitor(0);
 SignalMonitor StTOutHotter = SignalMonitor(0);
 
-SignalHysteresis SigHysTOut = SignalHysteresis(1);
+SignalHysteresis SigHysTOut = SignalHysteresis(0);
 
 TurnOnOffDelay TurnOffDlyTOutHotter = TurnOnOffDelay(0);
 

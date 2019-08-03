@@ -46,8 +46,8 @@ SignalHysteresis::SignalHysteresis(boolean _y_kn1)
     y_kn1 = _y_kn1;
 }
 
-/* returns 1 if signal is above the upper level
-   0 if the signal is below the lower level */
+/* returns 1 if signal rises above the upper level
+   0 if the signal falls below the lower level */
 boolean SignalHysteresis::update(float _x_k, float _LvlLwr, float _LvlUpr)
 {
     if(y_kn1 == 0 && _x_k > _LvlUpr) y_kn1 = 1;
